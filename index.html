@@ -21,7 +21,7 @@
     --accent:#c8f542; --accent-dim:rgba(200,245,66,0.12); --accent-border:rgba(200,245,66,0.3);
     --red:#ff4444; --orange:#ff8c42;
     --font-mono:'IBM Plex Mono',monospace; --font-sans:'IBM Plex Sans',sans-serif;
-    --c-monthly:#4287ff; --c-annual:#c8f542; --c-corporate:#a855f7; --c-other:#2dd4bf; --c-event:#ff8c42;
+    --c-monthly:#4287ff; --c-annual:#c8f542; --c-corporate:#a855f7; --c-free:#2dd4bf; --c-other:#888; --c-event:#ff8c42;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:13px;line-height:1.5;min-height:100vh;}
@@ -372,6 +372,7 @@
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn-sm on"  id="mf-all"       onclick="setMapFilter('all')">All Active</button>
           <button class="btn-sm"     id="mf-monthly"   onclick="setMapFilter('monthly')">Monthly</button>
+          <button class="btn-sm"     id="mf-free"      onclick="setMapFilter('free')">Free</button>
           <button class="btn-sm"     id="mf-annual"    onclick="setMapFilter('annual')">Annual</button>
           <button class="btn-sm"     id="mf-corporate" onclick="setMapFilter('corporate')">Corporate</button>
           <button class="btn-sm"     id="mf-canceled"  onclick="setMapFilter('canceled')">Lapsed</button>
@@ -406,8 +407,8 @@ let mapFilter='all', leafMap=null, mapCluster=null;
 let payCache=[];  // payments filtered to current period
 let dcf={dr:10,mc:3,ac:8,cc:5};
 
-const C={monthly:'#4287ff',annual:'#c8f542',corporate:'#a855f7',other:'#2dd4bf',event:'#ff8c42'};
-const L={monthly:'Monthly',annual:'Annual',corporate:'Corporate',other:'Other',event:'Event'};
+const C={monthly:'#4287ff',annual:'#c8f542',corporate:'#a855f7',free:'#2dd4bf',other:'#888',event:'#ff8c42'};
+const L={monthly:'Monthly',annual:'Annual',corporate:'Corporate',free:'Free',other:'Other',event:'Event'};
 
 // ════════════════════════════════════════════════
 // LOAD
@@ -487,9 +488,9 @@ function analyzePay(from,to,tf) {
 function analyzeSubs(tf) {
   // Active subs only for live snapshot metrics
   const active=allSubs.filter(s=>s.status==='active'&&(tf==='all'||s.type===tf));
-  const counts={monthly:0,annual:0,corporate:0,other:0};
+  const counts={monthly:0,annual:0,corporate:0,free:0,other:0};
   let mrr=0;
-  active.forEach(s=>{counts[s.type]=(counts[s.type]||0)+1;mrr+=s.interval==='year'?s.amount/12:s.amount;});
+  active.forEach(s=>{counts[s.type]=(counts[s.type]||0)+1;if(s.type!=='free')mrr+=s.interval==='year'?s.amount/12:s.amount;});
   return{active,counts,total:active.length,mrr:Math.round(mrr*100)/100,arr:Math.round(mrr*12*100)/100};
 }
 
@@ -505,7 +506,7 @@ function calcDCF(tf) {
 
 // Churn analysis — uses all canceled subs
 function churnStats(tf) {
-  const types = tf==='all' ? ['monthly','annual','corporate','other'] : [tf];
+  const types = tf==='all' ? ['monthly','annual','corporate','free','other'] : [tf];
   const result={};
   types.forEach(t=>{
     const canceled=allSubs.filter(s=>s.status==='canceled'&&s.type===t&&s.tenure_days!=null);
@@ -680,7 +681,7 @@ const subRev=pa=>['monthly','annual','corporate'].reduce((s,t)=>s+((pa.byType[t]
 // ════════════════════════════════════════════════
 function renderChurn() {
   const stats=churnStats('all');
-  const types=['monthly','annual','corporate'];
+  const types=['monthly','annual','corporate','free'];
   const maxTenure=Math.max(...types.map(t=>stats[t]?.avgTenureDays||0),1);
 
   // Lapsed subscriber table state
@@ -911,9 +912,9 @@ function renderTrends() {
   }
   const snaps=allSnapshots.slice(-90);
   lineChart('trend-mrr',   snaps,[{key:'mrr',color:'#c8f542',label:'MRR'}],f$);
-  lineChart('trend-subs',  snaps,[{key:'active_monthly',color:'#4287ff',label:'Monthly'},{key:'active_annual',color:'#c8f542',label:'Annual'},{key:'active_corporate',color:'#a855f7',label:'Corporate'}],fN);
+  lineChart('trend-subs',  snaps,[{key:'active_monthly',color:'#4287ff',label:'Monthly'},{key:'active_annual',color:'#c8f542',label:'Annual'},{key:'active_corporate',color:'#a855f7',label:'Corporate'},{key:'active_free',color:'#2dd4bf',label:'Free'}],fN);
   lineChart('trend-churn', snaps,[{key:'new_30d',color:'#c8f542',label:'New (30d)'},{key:'canceled_30d',color:'#ff4444',label:'Canceled (30d)'}],fN);
-  lineChart('trend-tenure',snaps,[{key:'avg_tenure_monthly',color:'#4287ff',label:'Monthly (days)'},{key:'avg_tenure_annual',color:'#c8f542',label:'Annual (days)'},{key:'avg_tenure_corporate',color:'#a855f7',label:'Corporate (days)'}],v=>Math.round(v)+'d');
+  lineChart('trend-tenure',snaps,[{key:'avg_tenure_monthly',color:'#4287ff',label:'Monthly (days)'},{key:'avg_tenure_annual',color:'#c8f542',label:'Annual (days)'},{key:'avg_tenure_corporate',color:'#a855f7',label:'Corporate (days)'},{key:'avg_tenure_free',color:'#2dd4bf',label:'Free (days)'}],v=>Math.round(v)+'d');
 }
 
 function lineChart(id,snaps,series,fmt) {
@@ -966,7 +967,7 @@ function makeDotIcon(type, canceled) {
 
 function makeDonutIcon(childMarkers) {
   // Count by sub-type
-  const counts = { monthly:0, annual:0, corporate:0, other:0, canceled:0 };
+  const counts = { monthly:0, annual:0, corporate:0, free:0, other:0, canceled:0 };
   childMarkers.forEach(m => {
     const k = m.options.subType;
     if(counts[k] !== undefined) counts[k]++;
@@ -979,6 +980,7 @@ function makeDonutIcon(childMarkers) {
     { key:'monthly',   color: C.monthly   },
     { key:'annual',    color: C.annual    },
     { key:'corporate', color: C.corporate },
+    { key:'free',      color: C.free      },
     { key:'canceled',  color: '#555'      },
     { key:'other',     color: C.other     },
   ].map(s => ({...s, count: counts[s.key]})).filter(s => s.count > 0);
@@ -1055,7 +1057,7 @@ function renderMapMarkers() {
 
 function setMapFilter(f){
   mapFilter=f;
-  ['all','monthly','annual','corporate','canceled'].forEach(t=>{const el=document.getElementById(`mf-${t}`);if(el)el.classList.toggle('on',t===f);});
+  ['all','monthly','annual','corporate','free','canceled'].forEach(t=>{const el=document.getElementById(`mf-${t}`);if(el)el.classList.toggle('on',t===f);});
   renderMapMarkers();
 }
 

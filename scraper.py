@@ -46,10 +46,12 @@ CHECKPOINT_EVERY    = 1000   # save payments.json every N payments accumulated
 
 # ── Plan classification ────────────────────────────────────────────────────────
 
-def classify_plan(nickname, plan_id, interval):
+def classify_plan(nickname, plan_id, interval, amount=0):
     name = (nickname or plan_id or "").lower()
     if "corp" in name or "corporate" in name:
         return "corporate"
+    if "free" in name or amount == 0:
+        return "free"
     if interval == "year" or "annual" in name or "yearly" in name:
         return "annual"
     if interval == "month" or "month" in name:
@@ -128,29 +130,79 @@ def save_geocache(cache):
     with open(GEOCODE_CACHE_FILE, "w") as f:
         json.dump(cache, f)
 
+NOMINATIM_UA = "BusinessDen-SubscriberTracker/1.0"
+
 def geocode(street, city, state, zip_code, cache):
-    """Geocode via US Census Bureau (free, no key). Returns (lat, lng) or (None, None)."""
+    """Geocode a US address. Three-tier fallback:
+      1. Nominatim full address (best accuracy)
+      2. Nominatim zip+state only (high match rate, centroid accuracy)
+      3. Census zip+state only (last resort)
+    Results cached to avoid repeat API calls.
+    """
     cache_key = f"{street}|{city}|{state}|{zip_code}".lower().strip()
     if cache_key in cache:
         hit = cache[cache_key]
         return hit.get("lat"), hit.get("lng")
-    try:
+
+    zip_key = f"||{state}|{zip_code}".lower().strip()
+
+    def nominatim(params):
+        r = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={**params, "format": "json", "limit": 1, "countrycodes": "us"},
+            headers={"User-Agent": NOMINATIM_UA},
+            timeout=12
+        )
+        results = r.json()
+        if results:
+            return float(results[0]["lat"]), float(results[0]["lon"])
+        return None, None
+
+    def census_zip():
         r = requests.get(
             "https://geocoding.geo.census.gov/geocoder/locations/address",
-            params={"street": street or "", "city": city or "", "state": state or "",
-                    "zip": zip_code or "", "benchmark": "Public_AR_Current", "format": "json"},
+            params={"city": city or "", "state": state or "", "zip": zip_code,
+                    "benchmark": "Public_AR_Current", "format": "json"},
             timeout=12
         )
         matches = r.json().get("result", {}).get("addressMatches", [])
         if matches:
             c = matches[0]["coordinates"]
-            lat, lng = c["y"], c["x"]
-            cache[cache_key] = {"lat": lat, "lng": lng}
-            return lat, lng
+            return c["y"], c["x"]
+        return None, None
+
+    lat, lng = None, None
+    try:
+        # Tier 1: Nominatim full address
+        params = {}
+        if street:   params["street"]     = street
+        if city:     params["city"]       = city
+        if state:    params["state"]      = state
+        if zip_code: params["postalcode"] = zip_code
+        if params:
+            lat, lng = nominatim(params)
+            time.sleep(1.1)  # Nominatim ToS: max 1 req/sec
+
+        # Tier 2: Nominatim zip only
+        if not lat and zip_code:
+            if zip_key in cache and cache[zip_key].get("lat"):
+                lat, lng = cache[zip_key]["lat"], cache[zip_key]["lng"]
+            else:
+                lat, lng = nominatim({"postalcode": zip_code, "state": state or ""})
+                time.sleep(1.1)
+                cache[zip_key] = {"lat": lat, "lng": lng}
+
+        # Tier 3: Census zip
+        if not lat and zip_code:
+            lat, lng = census_zip()
+            if lat:
+                cache[zip_key] = {"lat": lat, "lng": lng}
+
     except Exception:
         pass
-    cache[cache_key] = {"lat": None, "lng": None}
-    return None, None
+
+    cache[cache_key] = {"lat": lat, "lng": lng}
+    return lat, lng
 
 # ── Subscriber builder ─────────────────────────────────────────────────────────
 
@@ -159,7 +211,7 @@ def build_subscriber(sub, cust, geocache, index, total):
     interval = plan.get("interval", "")
     nickname = plan.get("nickname") or plan.get("id") or ""
     amount   = plan.get("amount", 0) / 100
-    sub_type = classify_plan(nickname, plan.get("id"), interval)
+    sub_type = classify_plan(nickname, plan.get("id"), interval, amount)
 
     shipping = (cust or {}).get("shipping") or {}
     if isinstance(shipping, dict) and "line1" in shipping:
@@ -204,7 +256,9 @@ def build_subscriber(sub, cust, geocache, index, total):
         "current_period_end":   sub.get("current_period_end"),
         "lat":                  lat,
         "lng":                  lng,
+        "city":                 city if country == "US" else None,
         "state":                state if country == "US" else None,
+        "zip":                  zip_code if country == "US" else None,
         "country":              country or None,
     }
 
@@ -468,7 +522,8 @@ def scrape(stripe_key):
     mrr    = 0.0
     for s in active_records:
         counts[s["type"]] = counts.get(s["type"], 0) + 1
-        mrr += s["amount"] / 12 if s["interval"] == "year" else s["amount"]
+        if s["type"] != "free":
+            mrr += s["amount"] / 12 if s["interval"] == "year" else s["amount"]
 
     thirty_ago   = now_ts - 30 * 86400
     new_30d      = sum(1 for s in all_sub_records if (s.get("started_at") or 0) >= thirty_ago)
@@ -488,6 +543,7 @@ def scrape(stripe_key):
         "active_monthly":       counts.get("monthly", 0),
         "active_annual":        counts.get("annual", 0),
         "active_corporate":     counts.get("corporate", 0),
+        "active_free":          counts.get("free", 0),
         "active_other":         counts.get("other", 0),
         "mrr":                  round(mrr, 2),
         "arr":                  round(mrr * 12, 2),
@@ -496,6 +552,7 @@ def scrape(stripe_key):
         "avg_tenure_monthly":   avg_tenure("monthly"),
         "avg_tenure_annual":    avg_tenure("annual"),
         "avg_tenure_corporate": avg_tenure("corporate"),
+        "avg_tenure_free":      avg_tenure("free"),
     }
 
     # ── Write subscribers + snapshots ─────────────────────────────────────────
@@ -537,6 +594,7 @@ def scrape(stripe_key):
 ║    Monthly           : {counts.get('monthly',0):<22}║
 ║    Annual            : {counts.get('annual',0):<22}║
 ║    Corporate         : {counts.get('corporate',0):<22}║
+║    Free              : {counts.get('free',0):<22}║
 ║  Canceled (all time) : {canceled_total:<22}║
 ║  MRR                 : ${mrr:<21.2f}║
 ║  ARR                 : ${mrr*12:<21.2f}║
