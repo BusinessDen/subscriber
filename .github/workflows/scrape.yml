@@ -1,1 +1,100 @@
+name: Revenue Tracker
 
+on:
+  schedule:
+    # 6am MST (Nov-Mar) = 13:00 UTC
+    # 6am MDT (Mar-Nov) = 12:00 UTC
+    - cron: '0 12 * * *'
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check DST — only run at 6am MT
+        id: dst_check
+        run: |
+          HOUR_MT=$(TZ=America/Denver date +%H)
+          echo "Mountain Time hour: $HOUR_MT"
+          if [ "$HOUR_MT" = "06" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Wrong hour for current DST - skipping"
+          fi
+
+      - name: Checkout repo
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull latest
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        run: git pull origin main
+
+      - name: Set up Python
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        run: pip install requests
+
+      - name: Run scraper
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+        run: python3 scraper.py
+
+      - name: Commit and push data
+        if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --soft origin/main
+          git add data/subscribers.json data/payments.json data/snapshots.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily scrape $(date -u +%Y-%m-%d)"
+            git push --force
+          fi
+
+  deploy:
+    needs: scrape
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Pull latest data
+        run: git pull origin main
+
+      - name: Delete previous Pages artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: github-pages
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
