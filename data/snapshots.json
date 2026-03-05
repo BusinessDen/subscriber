@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-03-05T08:45:07.689974+00:00",
+  "snapshots": [
+    {
+      "date": "2026-03-05",
+      "timestamp": 1772689740,
+      "active_total": 4053,
+      "active_monthly": 1018,
+      "active_annual": 3035,
+      "active_corporate": 0,
+      "active_other": 0,
+      "mrr": 58015.92,
+      "arr": 696191.0,
+      "new_30d": 103,
+      "canceled_30d": 52,
+      "avg_tenure_monthly": 353.1,
+      "avg_tenure_annual": 527.0,
+      "avg_tenure_corporate": null
+    }
+  ]
+}
