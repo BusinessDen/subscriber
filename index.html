@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script>var _MCG = L.markerClusterGroup;</script>
+<script>var _MCG = function(opts){ return L.markerClusterGroup(opts); };</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
@@ -1011,8 +1011,7 @@ function renderMapMarkers() {
   const shown = allSubs.filter(s => {
     if(!s.lat||!s.lng) return false;
     if(mapFilter==='canceled') return s.status==='canceled';
-    if(mapFilter==='all')      return true;
-    if(mapFilter==='active')   return s.status==='active';
+    if(mapFilter==='all')      return s.status==='active';
     return s.status==='active' && s.type===mapFilter;
   });
 
