@@ -410,14 +410,24 @@ const L={monthly:'Monthly',annual:'Annual',corporate:'Corporate',other:'Other',e
 async function init() {
   setLoading(true);
   try {
-    const [s,p,sn] = await Promise.all([
+    // Discover yearly payment files (try current year back to 2019)
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({length: currentYear - 2018}, (_, i) => currentYear - i);
+    const payFetches = years.map(y =>
+      fetch(`data/payments_${y}.json`).then(r => r.ok ? r.json() : null).catch(() => null)
+    );
+    const [s, sn, ...payResults] = await Promise.all([
       fetch('data/subscribers.json').then(r=>{if(!r.ok)throw new Error('subscribers.json not found');return r.json();}),
-      fetch('data/payments.json').then(r=>{if(!r.ok)throw new Error('payments.json not found');return r.json();}),
       fetch('data/snapshots.json').then(r=>{if(!r.ok)throw new Error('snapshots.json not found');return r.json();}),
+      ...payFetches,
     ]);
     allSubs      = s.subscribers || [];
-    allPayments  = p.payments    || [];
     allSnapshots = sn.snapshots  || [];
+    allPayments  = payResults
+      .filter(Boolean)
+      .flatMap(p => p.payments || [])
+      .sort((a, b) => b.timestamp - a.timestamp);
+    if (!allPayments.length) throw new Error('No payments_YYYY.json files found');
     document.getElementById('freshness').innerHTML =
       s.generated_at ? `<strong>Updated:</strong> ${new Date(s.generated_at).toLocaleString()}` : '';
     applyFilters();

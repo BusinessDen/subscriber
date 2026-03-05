@@ -5,7 +5,7 @@ BusinessDen Revenue Tracker — Local Scraper
 Writes three JSON files to ./data/:
 
   subscribers.json  — ALL subscribers (active + canceled), no PII, geocoded
-  payments.json     — Every successful charge, accumulated over time
+  payments_YYYY.json — Every successful charge, split by year (payments_2021.json etc.)
   snapshots.json    — Daily aggregate snapshot, one record per run
 
 First run: fetches everything from Stripe. Charges are fetched in pages and
@@ -37,7 +37,6 @@ from pathlib import Path
 
 DATA_DIR            = Path(__file__).parent / "data"
 SUBSCRIBERS_FILE    = DATA_DIR / "subscribers.json"
-PAYMENTS_FILE       = DATA_DIR / "payments.json"
 SNAPSHOTS_FILE      = DATA_DIR / "snapshots.json"
 GEOCODE_CACHE_FILE  = DATA_DIR / ".geocode_cache.json"
 STATE_FILE          = DATA_DIR / ".scraper_state.json"
@@ -240,21 +239,34 @@ def charge_to_payment(c, subs_by_customer):
 
 # ── Payments I/O ───────────────────────────────────────────────────────────────
 
+def payments_file(year):
+    return DATA_DIR / f"payments_{year}.json"
+
 def load_payments():
-    if PAYMENTS_FILE.exists():
-        with open(PAYMENTS_FILE) as f:
-            return json.load(f).get("payments", [])
-    return []
+    """Load all payments from all yearly files."""
+    all_payments = []
+    for f in sorted(DATA_DIR.glob("payments_*.json")):
+        with open(f) as fh:
+            all_payments.extend(json.load(fh).get("payments", []))
+    return all_payments
 
 def save_payments(payments):
-    sorted_pays = sorted(payments, key=lambda x: x["timestamp"], reverse=True)
-    with open(PAYMENTS_FILE, "w") as f:
-        json.dump({
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "count":        len(sorted_pays),
-            "payments":     sorted_pays,
-        }, f, indent=2)
-    return sorted_pays
+    """Split payments by year and write one file per year."""
+    by_year = {}
+    for p in payments:
+        year = p["date"][:4] if p.get("date") else "unknown"
+        by_year.setdefault(year, []).append(p)
+    for year, pays in by_year.items():
+        pays.sort(key=lambda x: x["timestamp"], reverse=True)
+        with open(payments_file(year), "w") as f:
+            json.dump({
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "year":         year,
+                "count":        len(pays),
+                "payments":     pays,
+            }, f, indent=2)
+    sorted_all = sorted(payments, key=lambda x: x["timestamp"], reverse=True)
+    return sorted_all
 
 # ── Main scrape ────────────────────────────────────────────────────────────────
 
