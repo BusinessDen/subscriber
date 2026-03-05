@@ -1015,6 +1015,7 @@ function renderMapMarkers() {
     return s.status==='active' && s.type===mapFilter;
   });
 
+  L = _L; // restore L before markercluster uses it internally
   mapCluster = _MCG({
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
