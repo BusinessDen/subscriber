@@ -67,7 +67,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git reset --soft origin/main
-          git add data/subscribers.json data/payments.json data/snapshots.json
+          git add data/subscribers.json data/snapshots.json
+          git add data/payments_*.json
           git add data/.scraper_state.json
           git add data/.geocode_cache.json
           # Never commit workflow files — GitHub blocks this
