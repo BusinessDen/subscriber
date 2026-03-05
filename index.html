@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://*.cartocdn.com; connect-src 'self' https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://fonts.googleapis.com https://fonts.gstatic.com;">
 <title>Revenue Tracker — BusinessDen</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -413,7 +412,7 @@ async function init() {
   try {
     // Discover yearly payment files (try current year back to 2019)
     const currentYear = new Date().getFullYear();
-    const years = Array.from({length: currentYear - 2018}, (_, i) => currentYear - i);
+    const years = Array.from({length: currentYear - 2019}, (_, i) => currentYear - i);
     const payFetches = years.map(y =>
       fetch(`data/payments_${y}.json`).then(r => r.ok ? r.json() : null).catch(() => null)
     );
