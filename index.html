@@ -788,6 +788,15 @@ function renderChurn(from, to) {
       <div class="trend-wrap" id="churn-renewal-chart"></div>
     </div>
 
+    <!-- Net new paying subscribers -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Net New Paying Subscribers — <span>Cumulative, stacked by type</span></div>
+        <div class="panel-meta">Monthly · Annual · Corporate</div>
+      </div>
+      <div class="trend-wrap" id="churn-netnew-chart"></div>
+    </div>
+
     <!-- Tenure bars + LTV -->
     <div class="two-col">
       <div class="panel" style="margin-bottom:0">
@@ -874,6 +883,7 @@ function renderChurn(from, to) {
   renderLapsedTable();
   renderNewLapsedChart();
   renderRenewalChart();
+  renderNetNewChart();
 }
 
 // ── New vs Lapsed chart ───────────────────────────────────────────────────────
@@ -1101,6 +1111,139 @@ function renderRenewalChart() {
   const legItems = types.map(t=>`<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C[t]};height:10px;border-radius:1px"></div>${LBL[t]}</div>`).join('');
   el.innerHTML = svg + `<div class="trend-leg">${legItems}</div>
     <p class="cohort-note" style="padding:8px 0 0">Shows % of subscribers reaching each renewal who then lapse. Renewal 1 = end of first billing period.</p>`;
+}
+
+// ── Net New Paying Subscribers — cumulative stacked line chart ────────────────
+function renderNetNewChart() {
+  const el = document.getElementById('churn-netnew-chart');
+  if(!el) return;
+  const from = window._churnFrom, to = window._churnTo;
+  if(!from || !to) return;
+
+  const payTypes = ['corporate','annual','monthly']; // stack order: corp bottom, annual mid, monthly top
+
+  // Build the same monthly bucket set as the New vs Lapsed chart above
+  const buckets = {};
+  const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+  const endM = new Date(to.getFullYear(), to.getMonth(), 1);
+  while(cur <= endM) {
+    const key = dsYM(cur);
+    buckets[key] = {};
+    payTypes.forEach(t => { buckets[key][t] = 0; });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  const months = Object.keys(buckets).sort();
+  if(!months.length) { el.innerHTML='<div class="empty" style="padding:24px">No data in selected period.</div>'; return; }
+
+  const monthIndex = {};
+  months.forEach((m, i) => { monthIndex[m] = i; });
+
+  // Tally net new per type per month within the window
+  const netByType = {};
+  payTypes.forEach(t => { netByType[t] = new Array(months.length).fill(0); });
+
+  allSubs.forEach(s => {
+    if(!payTypes.includes(s.type)) return;
+    const t = s.type;
+    if(s.started_at) {
+      const m = dsYM(new Date(s.started_at * 1000));
+      if(monthIndex[m] !== undefined) netByType[t][monthIndex[m]]++;
+    }
+    if(s.status === 'canceled' && s.canceled_at) {
+      const m = dsYM(new Date(s.canceled_at * 1000));
+      if(monthIndex[m] !== undefined) netByType[t][monthIndex[m]]--;
+    }
+  });
+
+  // Compute the running total for each type as of the month BEFORE the window opens
+  // so the chart lines start at the real subscriber count, not zero
+  const startingTotal = {};
+  payTypes.forEach(t => {
+    let running = 0;
+    allSubs.forEach(s => {
+      if(s.type !== t) return;
+      const startM = s.started_at ? dsYM(new Date(s.started_at * 1000)) : null;
+      const endM2  = (s.status === 'canceled' && s.canceled_at) ? dsYM(new Date(s.canceled_at * 1000)) : null;
+      if(startM && startM < months[0]) {
+        // Started before window
+        if(!endM2 || endM2 >= months[0]) running++; // still active at window start
+      }
+    });
+    startingTotal[t] = running;
+  });
+
+  // Convert net-by-month to cumulative within window, offset by starting total
+  const cumByType = {};
+  payTypes.forEach(t => {
+    cumByType[t] = [];
+    let running = startingTotal[t];
+    netByType[t].forEach(v => { running += v; cumByType[t].push(running); });
+  });
+
+  // Stacked top edges
+  const stacked = {};
+  const stackedBase = {};
+  payTypes.forEach((t, ti) => {
+    stacked[t] = months.map((_, i) => {
+      let sum = cumByType[t][i];
+      for(let j = 0; j < ti; j++) sum += cumByType[payTypes[j]][i];
+      return sum;
+    });
+    stackedBase[t] = months.map((_, i) => {
+      let sum = 0;
+      for(let j = 0; j < ti; j++) sum += cumByType[payTypes[j]][i];
+      return sum;
+    });
+  });
+
+  const allVals = payTypes.flatMap(t => [...stacked[t], ...stackedBase[t]]);
+  const maxVal = Math.max(...allVals, 1);
+  const minVal = Math.min(...allVals, 0);
+
+  // Match the new/lapsed chart dimensions exactly so x-axes align
+  const W=800, H=200, PL=40, PR=10, PT=12, PB=30, IW=W-PL-PR, IH=H-PT-PB;
+  const bw = IW / months.length;
+  // X centre of each month slot — mirrors xNew/xLapsed midpoint from the chart above
+  const xC = i => PL + i*bw + bw/2;
+  const yS = v => PT + IH - ((v - minVal) / Math.max(maxVal - minVal, 1)) * IH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Grid lines
+  for(let g=0; g<=4; g++) {
+    const v = minVal + (g/4) * (maxVal - minVal);
+    const y = yS(v);
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${Math.round(v)}</text>`;
+  }
+
+  // Filled stacked areas then top-edge lines
+  payTypes.forEach(t => {
+    const topPts  = months.map((_, i) => `${xC(i)},${yS(stacked[t][i])}`);
+    const basePts = months.map((_, i) => `${xC(i)},${yS(stackedBase[t][i])}`).reverse();
+    svg+=`<polygon points="${[...topPts, ...basePts].join(' ')}" fill="${C[t]}" opacity="0.18"/>`;
+    svg+=`<polyline points="${topPts.join(' ')}" fill="none" stroke="${C[t]}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`;
+  });
+
+  // X labels — same step logic as the chart above, centred on the same slots
+  const step = Math.max(1, Math.floor(months.length/8));
+  months.forEach((m, i) => {
+    if(i % step === 0)
+      svg+=`<text x="${xC(i)}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
+  });
+
+  // End-of-line value labels
+  const lastI = months.length - 1;
+  payTypes.forEach(t => {
+    svg+=`<text x="${xC(lastI)+6}" y="${yS(stacked[t][lastI])+4}" fill="${C[t]}" font-size="9" font-family="JetBrains Mono" font-weight="500">${Math.round(stacked[t][lastI])}</text>`;
+  });
+
+  svg+=`</svg>`;
+
+  const legItems = [...payTypes].reverse().map(t =>
+    `<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C[t]}"></div>${LBL[t]}</div>`
+  ).join('');
+  el.innerHTML = svg + `<div class="trend-leg">${legItems}</div>`;
 }
 
 window.setLapsedFilter=function(f) {
