@@ -466,7 +466,6 @@ async function init() {
       s.generated_at ? `<strong>Updated:</strong> ${new Date(s.generated_at).toLocaleString()}` : '';
     applyFilters();
     renderTrends();
-    renderChurn();
     renderForecasting();
   } catch(e) {
     notice(`⚠ ${e.message} — Run: python scraper.py then: python -m http.server 8000`);
@@ -773,6 +772,15 @@ function renderChurn(from, to) {
       <div class="trend-wrap" id="churn-newlapsed-chart"></div>
     </div>
 
+    <!-- Net new paying subscribers -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Net New Paying Subscribers — <span>Net change within period, by type</span></div>
+        <div class="panel-meta">Monthly · Annual · Corporate</div>
+      </div>
+      <div class="trend-wrap" id="churn-netnew-chart"></div>
+    </div>
+
     <!-- Churn by renewal event -->
     <div class="panel">
       <div class="panel-hd">
@@ -786,15 +794,6 @@ function renderChurn(from, to) {
         </div>
       </div>
       <div class="trend-wrap" id="churn-renewal-chart"></div>
-    </div>
-
-    <!-- Net new paying subscribers -->
-    <div class="panel">
-      <div class="panel-hd">
-        <div class="panel-title">Net New Paying Subscribers — <span>Cumulative, stacked by type</span></div>
-        <div class="panel-meta">Monthly · Annual · Corporate</div>
-      </div>
-      <div class="trend-wrap" id="churn-netnew-chart"></div>
     </div>
 
     <!-- Tenure bars + LTV -->
@@ -945,12 +944,15 @@ function renderNewLapsedChart() {
   });
   const maxVal = Math.max(maxNew, maxLapsed, 1);
 
-  const bw = IW / months.length;          // full width per month slot
-  const pairGap = Math.max(1, bw * 0.08); // gap between new and lapsed bar
-  const slotPad = Math.max(1, bw * 0.12); // padding each side of the month slot
-  const barW = (bw - slotPad*2 - pairGap) / 2; // each bar's width
-  const xNew    = i => PL + i*bw + slotPad;
-  const xLapsed = i => PL + i*bw + slotPad + barW + pairGap;
+  const rawBw = IW / months.length;
+  const bw = Math.min(rawBw, 80);             // cap slot width so few-month views look normal
+  const totalBarsW = bw * months.length;
+  const xOff = PL + (IW - totalBarsW) / 2;    // center the bar group in the chart area
+  const pairGap = Math.max(1, bw * 0.08);
+  const slotPad = Math.max(1, bw * 0.12);
+  const barW = (bw - slotPad*2 - pairGap) / 2;
+  const xNew    = i => xOff + i*bw + slotPad;
+  const xLapsed = i => xOff + i*bw + slotPad + barW + pairGap;
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
 
@@ -987,7 +989,7 @@ function renderNewLapsedChart() {
   const step = Math.max(1, Math.floor(months.length/8));
   months.forEach((m,i)=>{
     if(i%step===0) {
-      const cx = PL + i*bw + bw/2;
+      const cx = xOff + i*bw + bw/2;
       svg+=`<text x="${cx}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
     }
   });
@@ -1155,32 +1157,15 @@ function renderNetNewChart() {
     }
   });
 
-  // Compute the running total for each type as of the month BEFORE the window opens
-  // so the chart lines start at the real subscriber count, not zero
-  const startingTotal = {};
-  payTypes.forEach(t => {
-    let running = 0;
-    allSubs.forEach(s => {
-      if(s.type !== t) return;
-      const startM = s.started_at ? dsYM(new Date(s.started_at * 1000)) : null;
-      const endM2  = (s.status === 'canceled' && s.canceled_at) ? dsYM(new Date(s.canceled_at * 1000)) : null;
-      if(startM && startM < months[0]) {
-        // Started before window
-        if(!endM2 || endM2 >= months[0]) running++; // still active at window start
-      }
-    });
-    startingTotal[t] = running;
-  });
-
-  // Convert net-by-month to cumulative within window, offset by starting total
+  // Cumulative net change from zero — no starting offset
   const cumByType = {};
   payTypes.forEach(t => {
     cumByType[t] = [];
-    let running = startingTotal[t];
+    let running = 0;
     netByType[t].forEach(v => { running += v; cumByType[t].push(running); });
   });
 
-  // Stacked top edges
+  // Stacked top edges (for the area fills)
   const stacked = {};
   const stackedBase = {};
   payTypes.forEach((t, ti) => {
@@ -1202,19 +1187,28 @@ function renderNetNewChart() {
 
   // Match the new/lapsed chart dimensions exactly so x-axes align
   const W=800, H=200, PL=40, PR=10, PT=12, PB=30, IW=W-PL-PR, IH=H-PT-PB;
-  const bw = IW / months.length;
-  // X centre of each month slot — mirrors xNew/xLapsed midpoint from the chart above
-  const xC = i => PL + i*bw + bw/2;
+  const rawBw = IW / months.length;
+  const bw = Math.min(rawBw, 80);
+  const totalBarsW = bw * months.length;
+  const xOff = PL + (IW - totalBarsW) / 2;
+  const xC = i => xOff + i*bw + bw/2;
   const yS = v => PT + IH - ((v - minVal) / Math.max(maxVal - minVal, 1)) * IH;
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Zero baseline
+  if(minVal < 0) {
+    const y0 = yS(0);
+    svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/>`;
+  }
 
   // Grid lines
   for(let g=0; g<=4; g++) {
     const v = minVal + (g/4) * (maxVal - minVal);
     const y = yS(v);
     svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${Math.round(v)}</text>`;
+    const lbl = v >= 0 ? '+'+Math.round(v) : Math.round(v);
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${lbl}</text>`;
   }
 
   // Filled stacked areas then top-edge lines
@@ -1225,17 +1219,19 @@ function renderNetNewChart() {
     svg+=`<polyline points="${topPts.join(' ')}" fill="none" stroke="${C[t]}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`;
   });
 
-  // X labels — same step logic as the chart above, centred on the same slots
+  // X labels
   const step = Math.max(1, Math.floor(months.length/8));
   months.forEach((m, i) => {
     if(i % step === 0)
       svg+=`<text x="${xC(i)}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
   });
 
-  // End-of-line value labels
+  // End-of-line value labels with +/- sign
   const lastI = months.length - 1;
   payTypes.forEach(t => {
-    svg+=`<text x="${xC(lastI)+6}" y="${yS(stacked[t][lastI])+4}" fill="${C[t]}" font-size="9" font-family="JetBrains Mono" font-weight="500">${Math.round(stacked[t][lastI])}</text>`;
+    const v = Math.round(stacked[t][lastI]);
+    const lbl = v >= 0 ? '+'+v : String(v);
+    svg+=`<text x="${xC(lastI)+6}" y="${yS(stacked[t][lastI])+4}" fill="${C[t]}" font-size="9" font-family="JetBrains Mono" font-weight="500">${lbl}</text>`;
   });
 
   svg+=`</svg>`;
