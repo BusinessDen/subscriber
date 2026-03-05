@@ -63,7 +63,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git reset --soft origin/main
+          # Commit data files + state file (state tells next run where to resume from)
           git add data/subscribers.json data/payments.json data/snapshots.json
+          git add data/.scraper_state.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
