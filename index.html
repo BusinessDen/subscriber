@@ -7,6 +7,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>var _L = L;</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>var _MCG = L.markerClusterGroup;</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
@@ -398,7 +402,7 @@ let allSubs=[], allPayments=[], allSnapshots=[];
 let period='ytd', subType='all';
 let cmpEnabled=false, cmpPeriod='prev_period';
 let payFilter='all', paySort={col:'date',dir:'desc'};
-let mapFilter='all', leafMap=null, mapMarkers=[];
+let mapFilter='all', leafMap=null, mapCluster=null;
 let payCache=[];  // payments filtered to current period
 let dcf={dr:10,mc:3,ac:8,cc:5};
 
@@ -941,47 +945,92 @@ function lineChart(id,snaps,series,fmt) {
 function initMap() {
   if(leafMap) return;
   leafMap=_L.map('subscriber-map',{center:[39.5,-98.35],zoom:4});
-  // Primary: CartoDB dark tiles
-  const primary = _L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+  _L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
     subdomains:'abcd', maxZoom:19
-  });
-  // Fallback: OpenStreetMap
-  const fallback = _L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom:19
-  });
-  primary.on('tileerror', () => { if(!leafMap._fallbackAdded) { fallback.addTo(leafMap); leafMap._fallbackAdded=true; }});
-  primary.addTo(leafMap);
+  }).addTo(leafMap);
   setTimeout(() => leafMap.invalidateSize(), 100);
   renderMapMarkers();
 }
 
-function markerIcon(type,canceled) {
-  const color=canceled?'#444444':(C[type]||C.other);
+function makeDotIcon(type, canceled) {
+  const color = canceled ? '#555' : (C[type]||C.other);
+  const op    = canceled ? 0.5 : 0.9;
   return _L.divIcon({
-    html:`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-      <circle cx="9" cy="9" r="6" fill="${color}" fill-opacity="${canceled?0.6:0.9}" stroke="#000" stroke-width="1.5"/>
-      <circle cx="9" cy="9" r="2.5" fill="#000" fill-opacity="0.4"/>
+    html:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+      <circle cx="6" cy="6" r="5" fill="${color}" fill-opacity="${op}" stroke="#000" stroke-width="1"/>
     </svg>`,
-    className:'',iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-11]
+    className:'', iconSize:[12,12], iconAnchor:[6,6], popupAnchor:[0,-8]
   });
+}
+
+function makeDonutIcon(childMarkers) {
+  // Count by sub-type
+  const counts = { monthly:0, annual:0, corporate:0, other:0, canceled:0 };
+  childMarkers.forEach(m => {
+    const k = m.options.subType;
+    if(counts[k] !== undefined) counts[k]++;
+    else counts.other++;
+  });
+  const total = childMarkers.length;
+  const size  = total < 10 ? 36 : total < 50 ? 46 : total < 200 ? 54 : 62;
+  const r     = size / 2;
+  const slices = [
+    { key:'monthly',   color: C.monthly   },
+    { key:'annual',    color: C.annual    },
+    { key:'corporate', color: C.corporate },
+    { key:'canceled',  color: '#555'      },
+    { key:'other',     color: C.other     },
+  ].map(s => ({...s, count: counts[s.key]})).filter(s => s.count > 0);
+
+  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+  if(slices.length === 1) {
+    svg += `<circle cx="${r}" cy="${r}" r="${r-1}" fill="${slices[0].color}" opacity="0.85"/>`;
+  } else {
+    let sa = -Math.PI / 2;
+    slices.forEach(s => {
+      const a  = (s.count / total) * 2 * Math.PI;
+      const ea = sa + a;
+      const x1 = r + (r-1)*Math.cos(sa), y1 = r + (r-1)*Math.sin(sa);
+      const x2 = r + (r-1)*Math.cos(ea), y2 = r + (r-1)*Math.sin(ea);
+      svg += `<path d="M${r},${r} L${x1},${y1} A${r-1},${r-1} 0 ${a>Math.PI?1:0},1 ${x2},${y2} Z" fill="${s.color}" opacity="0.85"/>`;
+      sa = ea;
+    });
+  }
+  // Donut hole + count label
+  svg += `<circle cx="${r}" cy="${r}" r="${r*0.52}" fill="#0a0a0a"/>`;
+  svg += `<text x="${r}" y="${r}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-family="IBM Plex Mono,monospace" font-weight="700" font-size="${size<46?10:12}">${total}</text>`;
+  svg += `</svg>`;
+  return _L.divIcon({ html:svg, className:'', iconSize:[size,size], iconAnchor:[size/2,size/2] });
 }
 
 function renderMapMarkers() {
   if(!leafMap) return;
-  mapMarkers.forEach(m=>m.remove()); mapMarkers=[];
-  const shown=allSubs.filter(s=>{
+  if(mapCluster) { leafMap.removeLayer(mapCluster); mapCluster=null; }
+
+  const shown = allSubs.filter(s => {
     if(!s.lat||!s.lng) return false;
     if(mapFilter==='canceled') return s.status==='canceled';
-    if(mapFilter==='all') return s.status==='active';
-    return s.status==='active'&&s.type===mapFilter;
+    if(mapFilter==='all')      return true;
+    if(mapFilter==='active')   return s.status==='active';
+    return s.status==='active' && s.type===mapFilter;
   });
-  shown.forEach(s=>{
-    const isCanceled=s.status==='canceled';
-    const color=isCanceled?'#888':(C[s.type]||C.other);
-    const cancelDate=s.canceled_at?new Date(s.canceled_at*1000).toISOString().slice(0,10):'—';
-    const popup=`<div class="map-pop">
+
+  mapCluster = _MCG({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    chunkedLoading: true,
+    iconCreateFunction: function(cl) {
+      return makeDonutIcon(cl.getAllChildMarkers());
+    }
+  });
+
+  shown.forEach(s => {
+    const isCanceled = s.status==='canceled';
+    const color      = isCanceled ? '#888' : (C[s.type]||C.other);
+    const cancelDate = s.canceled_at ? new Date(s.canceled_at*1000).toISOString().slice(0,10) : '—';
+    const popup = `<div class="map-pop">
       <div class="map-pop-type" style="color:${color}">${L[s.type]||s.type}${isCanceled?' · Lapsed':''}</div>
       <div class="map-pop-row"><span>Plan</span><span>${esc(s.plan_name||s.interval||'—')}</span></div>
       <div class="map-pop-row"><span>Amount</span><span style="color:var(--accent)">${f$(s.amount)}</span></div>
@@ -990,12 +1039,18 @@ function renderMapMarkers() {
       <div class="map-pop-row"><span>Canceled</span><span>${cancelDate}</span></div>`:''}
       <div class="map-pop-row"><span>ID</span><span style="color:var(--text-dim);font-size:9px">${esc(s.customer_id||'—')}</span></div>
     </div>`;
-    const m=_L.marker([s.lat,s.lng],{icon:markerIcon(s.type,isCanceled)}).bindPopup(popup,{maxWidth:260,minWidth:200});
-    m.addTo(leafMap); mapMarkers.push(m);
+    const subType = isCanceled ? 'canceled' : (s.type||'other');
+    const m = _L.marker([s.lat,s.lng], {icon:makeDotIcon(s.type,isCanceled), subType}).bindPopup(popup,{maxWidth:260,minWidth:200});
+    mapCluster.addLayer(m);
   });
-  const el=document.getElementById('map-status');
-  if(el) el.textContent=`${fN(shown.length)} ${mapFilter==='canceled'?'lapsed':'active'} subscriber${shown.length!==1?'s':''} mapped`;
-  if(mapMarkers.length>1) leafMap.fitBounds(_L.featureGroup(mapMarkers).getBounds().pad(0.1),{maxZoom:12});
+
+  leafMap.addLayer(mapCluster);
+
+  const el = document.getElementById('map-status');
+  if(el) el.textContent=`${fN(shown.length)} subscriber${shown.length!==1?'s':''} mapped`;
+  if(shown.length > 1) {
+    try { leafMap.fitBounds(mapCluster.getBounds().pad(0.1),{maxZoom:12}); } catch(e){}
+  }
 }
 
 function setMapFilter(f){
