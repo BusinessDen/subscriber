@@ -283,9 +283,12 @@ def scrape(stripe_key):
     if is_first:
         canceled_subs = stripe_list("subscriptions", stripe_key, {"status": "canceled"}, "canceled subs")
     else:
-        canceled_subs = stripe_list("subscriptions", stripe_key,
-                                    {"status": "canceled", "canceled_at[gte]": since},
-                                    "newly canceled subs")
+        # Stripe doesn't support filtering canceled subs by canceled_at,
+        # so fetch all and filter in Python
+        all_canceled = stripe_list("subscriptions", stripe_key,
+                                   {"status": "canceled"}, "canceled subs")
+        canceled_subs = [s for s in all_canceled if (s.get("canceled_at") or 0) >= since]
+        print(f"  Filtered to {len(canceled_subs)} canceled since last run")
     all_new_subs = active_subs + canceled_subs
 
     # ── 3. Customer details ───────────────────────────────────────────────────
