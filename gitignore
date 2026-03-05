@@ -1,5 +1,4 @@
 # Scraper internals — keep state, ignore cache and interrupted checkpoints
-data/.geocode_cache.json
 data/.charges_checkpoint.json
 
 # Python
