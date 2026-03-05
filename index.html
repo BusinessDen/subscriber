@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Revenue Tracker — BusinessDen</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>var _L = L;</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script>var _MCG = _L.markerClusterGroup.bind(_L);</script>
+<script>var _L = L; var _MCG = L.markerClusterGroup.bind(L);</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
@@ -1017,7 +1016,6 @@ function renderMapMarkers() {
     return s.status==='active' && s.type===mapFilter;
   });
 
-  L = _L; // restore L before markercluster uses it internally
   mapCluster = _MCG({
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
