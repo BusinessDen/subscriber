@@ -935,9 +935,12 @@ function renderNewLapsedChart() {
   });
   const maxVal = Math.max(maxNew, maxLapsed, 1);
 
-  const bw = IW/months.length;
-  const halfBw = bw*0.38;
-  const xC = i => PL + i*bw + bw/2;
+  const bw = IW / months.length;          // full width per month slot
+  const pairGap = Math.max(1, bw * 0.08); // gap between new and lapsed bar
+  const slotPad = Math.max(1, bw * 0.12); // padding each side of the month slot
+  const barW = (bw - slotPad*2 - pairGap) / 2; // each bar's width
+  const xNew    = i => PL + i*bw + slotPad;
+  const xLapsed = i => PL + i*bw + slotPad + barW + pairGap;
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
 
@@ -945,41 +948,39 @@ function renderNewLapsedChart() {
   [0,0.25,0.5,0.75,1].forEach(t=>{
     const y=PT+IH-t*IH;
     svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-    if(t>0) svg+=`<text x="${PL-4}" y="${y+4}" fill="${'#706878'}" font-size="9" text-anchor="end" font-family="JetBrains Mono">${Math.round(t*maxVal)}</text>`;
+    if(t>0) svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${Math.round(t*maxVal)}</text>`;
   });
 
-  // Stacked bars — new (above axis) and lapsed (below, mirrored)
+  // Draw New bars (stacked, solid) then Lapsed bars (stacked, faded)
   months.forEach((m,i) => {
-    const cx = xC(i);
-    // New bars (stacked upward)
+    // New — stacked upward from baseline
     let yTop = PT+IH;
     activeTypes.forEach(t=>{
       const v = buckets[m].new[t]||0;
       if(!v) return;
       const bh = (v/maxVal)*IH;
       yTop -= bh;
-      svg+=`<rect x="${cx-halfBw}" y="${yTop}" width="${halfBw*2}" height="${bh}" fill="${C[t]}" opacity="0.8"/>`;
+      svg+=`<rect x="${xNew(i)}" y="${yTop}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.85"/>`;
     });
-    // Lapsed bars (stacked downward from axis — we'll just put them below as negative)
-    // Actually draw them as a separate grouped bar to the right
-  });
-
-  // Draw lapsed as separate bars (slightly offset)
-  months.forEach((m,i) => {
-    const cx = xC(i) + halfBw + 2;
-    let yTop = PT+IH;
+    // Lapsed — stacked upward from baseline, faded
+    yTop = PT+IH;
     activeTypes.forEach(t=>{
       const v = buckets[m].lapsed[t]||0;
       if(!v) return;
       const bh = (v/maxVal)*IH;
       yTop -= bh;
-      svg+=`<rect x="${cx}" y="${yTop}" width="${halfBw}" height="${bh}" fill="${C[t]}" opacity="0.45"/>`;
+      svg+=`<rect x="${xLapsed(i)}" y="${yTop}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.4"/>`;
     });
   });
 
-  // X labels — show every 3rd month or so
+  // X labels — centered on the pair, show every Nth month
   const step = Math.max(1, Math.floor(months.length/8));
-  months.forEach((m,i)=>{ if(i%step===0) svg+=`<text x="${xC(i)}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`; });
+  months.forEach((m,i)=>{
+    if(i%step===0) {
+      const cx = PL + i*bw + bw/2;
+      svg+=`<text x="${cx}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
+    }
+  });
 
   svg+=`</svg>`;
 
@@ -1055,11 +1056,13 @@ function renderRenewalChart() {
   });
 
   // Determine how many renewal slots to show (cut off where data gets sparse)
-  const W=800, H=160, PL=44, PR=10, PT=10, PB=30, IW=W-PL-PR, IH=H-PT-PB;
+  const W=800, H=240, PL=54, PR=10, PT=24, PB=36, IW=W-PL-PR, IH=H-PT-PB;
   const slots = maxRenewals;
-  const bw = IW / ((slots+1) * types.length + slots);
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Y-axis label — "Renewal Events" rotated
+  svg+=`<text transform="rotate(-90)" x="${-(PT+IH/2)}" y="13" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono" letter-spacing="0.08em">CHURN %</text>`;
 
   // Grid
   [0,25,50,75,100].forEach(pct=>{
@@ -1081,15 +1084,18 @@ function renderRenewalChart() {
       const pct = churned/survived*100;
       if(!pct) return;
       const bh = (pct/100)*IH;
-      const bWidth = (groupW/types.length)*0.7;
+      const bWidth = (groupW/types.length)*0.72;
       const bx = gx + ti*(groupW/types.length) + (groupW/types.length-bWidth)/2;
       const by = PT+IH-bh;
       svg+=`<rect x="${bx}" y="${by}" width="${bWidth}" height="${bh}" fill="${C[t]}" opacity="0.85" rx="1"/>`;
       if(pct > 5) svg+=`<text x="${bx+bWidth/2}" y="${by-3}" fill="${C[t]}" font-size="8" text-anchor="middle" font-family="JetBrains Mono">${Math.round(pct)}%</text>`;
     });
-    // X label
-    svg+=`<text x="${gx+groupW/2}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Renewal ${n+1}</text>`;
+    // X label — just the number
+    svg+=`<text x="${gx+groupW/2}" y="${H-6}" fill="#706878" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="500">${n+1}</text>`;
   }
+
+  // X-axis title
+  svg+=`<text x="${PL+IW/2}" y="${H}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono" letter-spacing="0.08em">RENEWAL EVENT</text>`;
 
   svg+=`</svg>`;
   const legItems = types.map(t=>`<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C[t]};height:10px;border-radius:1px"></div>${LBL[t]}</div>`).join('');
