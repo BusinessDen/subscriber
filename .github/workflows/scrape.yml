@@ -52,27 +52,7 @@ jobs:
 
       - name: Bootstrap state from snapshots if missing
         if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
-        run: |
-          python3 - << 'PYEOF'
-          import json, os, time
-          from pathlib import Path
-          state_file = Path("data/.scraper_state.json")
-          if not state_file.exists():
-              snaps_file = Path("data/snapshots.json")
-              if snaps_file.exists():
-                  snaps = json.loads(snaps_file.read_text()).get("snapshots", [])
-                  if snaps:
-                      last = sorted(snaps, key=lambda x: x["date"])[-1]
-                      ts = last["timestamp"]
-                      state_file.write_text(json.dumps({"last_run_ts": ts, "last_run_date": last["date"]}, indent=2))
-                      print(f"Bootstrapped state from snapshot: {last['date']} (ts={ts})")
-                  else:
-                      print("No snapshots found — will do full fetch")
-              else:
-                  print("No snapshots.json found — will do full fetch")
-          else:
-              print("State file already exists — skipping bootstrap")
-          PYEOF
+        run: python3 bootstrap_state.py
 
       - name: Run scraper
         if: steps.dst_check.outputs.skip != 'true' || github.event_name == 'workflow_dispatch'
@@ -87,7 +67,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git reset --soft origin/main
-          # Commit data files + state file (state tells next run where to resume from)
           git add data/subscribers.json data/payments.json data/snapshots.json
           git add data/.scraper_state.json
           if git diff --cached --quiet; then
