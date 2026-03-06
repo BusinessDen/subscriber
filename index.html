@@ -378,7 +378,7 @@
       <div class="trend-wrap" id="trend-subs"></div>
     </div>
     <div class="panel">
-      <div class="panel-hd"><div class="panel-title">Growth — <span>Daily New & Canceled + Cumulative Net</span></div></div>
+      <div class="panel-hd"><div class="panel-title">Subscribers — <span>Net Growth Over the Past 90 Days</span></div></div>
       <div class="trend-wrap" id="trend-churn"></div>
     </div>
     <div class="panel">
@@ -1658,68 +1658,80 @@ function renderGrowthChart(snaps) {
   let cumNet = 0;
   days.forEach(d => { cumNet += d.net; d.cumNet = cumNet; });
 
-  // Bar scale (left axis)
-  const maxBar = Math.max(...days.map(d => Math.max(d.newCount, d.canceledCount)), 1);
+  // Diverging bar scale — new goes up, canceled goes down from zero
+  const maxUp   = Math.max(...days.map(d => d.newCount), 1);
+  const maxDown = Math.max(...days.map(d => d.canceledCount), 1);
+  const barMax  = Math.max(maxUp, maxDown);
 
   // Cumulative net scale (right axis)
   const cumVals = days.map(d => d.cumNet);
-  const cumMax = Math.max(...cumVals, 1);
+  const cumMax = Math.max(...cumVals, 0);
   const cumMin = Math.min(...cumVals, 0);
-  const cumRange = Math.max(cumMax - cumMin, 1);
+  const cumPad = Math.max((cumMax - cumMin) * 0.05, 1);
+  const cumTop = cumMax + cumPad;
+  const cumBot = cumMin - cumPad;
+  const cumRange = cumTop - cumBot;
 
-  const W=800, H=140, PL=52, PR=42, PT=8, PB=20, IW=W-PL-PR, IH=H-PT-PB;
+  const W=800, H=160, PL=52, PR=42, PT=8, PB=20, IW=W-PL-PR, IH=H-PT-PB;
+  const halfH = IH / 2;
   const n = days.length;
   const bw = IW / n;
-  const barW = Math.max(1, bw * 0.35);
+  const barW = Math.max(1, bw * 0.7);
 
   const xC = i => PL + i * bw + bw / 2;
-  const yBar = v => PT + IH - (v / maxBar) * IH;
-  const yCum = v => PT + IH - ((v - cumMin) / cumRange) * IH;
+  const y0 = PT + halfH; // zero line
+  const yBar = (v, up) => up
+    ? y0 - (v / barMax) * halfH       // new bars go up
+    : y0 + (v / barMax) * halfH;      // canceled bars go down (returned as bottom edge)
+  const yCum = v => PT + IH - ((v - cumBot) / cumRange) * IH;
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
 
-  // Left axis grid (bar scale)
-  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
-    const v = Math.round(t * maxBar);
-    const y = yBar(v);
-    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${v}</text>`;
+  // Grid lines for bar scale (symmetric around zero)
+  const newColor = '#5cbfb0';
+  const cancelColor = '#e05c5c';
+
+  [0.5, 1].forEach(t => {
+    const v = Math.round(t * barMax);
+    // Positive grid
+    const yUp = y0 - t * halfH;
+    svg+=`<line x1="${PL}" y1="${yUp}" x2="${W-PR}" y2="${yUp}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${yUp+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">+${v}</text>`;
+    // Negative grid
+    const yDn = y0 + t * halfH;
+    svg+=`<line x1="${PL}" y1="${yDn}" x2="${W-PR}" y2="${yDn}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${yDn+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">-${v}</text>`;
   });
+
+  // Zero baseline
+  svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+  svg+=`<text x="${PL-4}" y="${y0+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">0</text>`;
 
   // Right axis labels (cumulative net scale)
   [0, 0.5, 1].forEach(t => {
-    const v = cumMin + t * cumRange;
+    const v = cumBot + t * cumRange;
     const y = yCum(v);
-    const lbl = Math.round(v) >= 0 ? '+'+Math.round(v) : String(Math.round(v));
+    const rv = Math.round(v);
+    const lbl = rv >= 0 ? '+'+rv : String(rv);
     svg+=`<text x="${W-PR+4}" y="${y+4}" fill="${C.annual}" font-size="8" text-anchor="start" font-family="JetBrains Mono" opacity="0.7">${lbl}</text>`;
   });
 
-  // Bars — new (green-ish) on left, canceled (red) on right
-  const newColor = '#5cbfb0';
-  const cancelColor = '#e05c5c';
+  // Bars — new goes up from zero, canceled goes down from zero
   days.forEach((d, i) => {
-    const cx = xC(i);
-    // New bar — left of center
+    const x = xC(i) - barW / 2;
     if(d.newCount > 0) {
-      const bh = (d.newCount / maxBar) * IH;
-      svg+=`<rect x="${cx - barW - 0.5}" y="${yBar(d.newCount)}" width="${barW}" height="${bh}" fill="${newColor}" opacity="0.8"/>`;
+      const bh = (d.newCount / barMax) * halfH;
+      svg+=`<rect x="${x}" y="${y0 - bh}" width="${barW}" height="${bh}" fill="${newColor}" opacity="0.8"/>`;
     }
-    // Canceled bar — right of center
     if(d.canceledCount > 0) {
-      const bh = (d.canceledCount / maxBar) * IH;
-      svg+=`<rect x="${cx + 0.5}" y="${yBar(d.canceledCount)}" width="${barW}" height="${bh}" fill="${cancelColor}" opacity="0.6"/>`;
+      const bh = (d.canceledCount / barMax) * halfH;
+      svg+=`<rect x="${x}" y="${y0}" width="${barW}" height="${bh}" fill="${cancelColor}" opacity="0.6"/>`;
     }
   });
 
   // Cumulative net line
   const cumPts = days.map((d, i) => `${xC(i)},${yCum(d.cumNet)}`).join(' ');
   svg+=`<polyline points="${cumPts}" fill="none" stroke="${C.annual}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`;
-
-  // Zero line for cumulative if range crosses zero
-  if(cumMin < 0) {
-    const y0 = yCum(0);
-    svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="${C.annual}" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>`;
-  }
 
   // X date labels
   const xLabels = [0, Math.floor(n/2), n-1];
@@ -1728,17 +1740,17 @@ function renderGrowthChart(snaps) {
       svg+=`<text x="${xC(i)}" y="${H}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${days[i].date.slice(5)}</text>`;
   });
 
-  // End-of-line cumulative label
+  // End-of-line cumulative label — offset LEFT of the last point so it doesn't overlap the right axis
   const lastCum = days[days.length - 1].cumNet;
   const lastLbl = lastCum >= 0 ? '+'+lastCum : String(lastCum);
-  svg+=`<text x="${xC(n-1)+4}" y="${yCum(lastCum)-5}" fill="${C.annual}" font-size="9" font-family="JetBrains Mono" font-weight="600">${lastLbl}</text>`;
+  svg+=`<text x="${xC(n-1)-6}" y="${yCum(lastCum)-6}" fill="${C.annual}" font-size="9" font-family="JetBrains Mono" font-weight="600" text-anchor="end">${lastLbl}</text>`;
 
   svg+=`</svg>`;
 
   el.innerHTML = svg + `<div class="trend-leg">
-    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${newColor};opacity:0.8;flex-shrink:0"></div>New (daily)</div>
-    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${cancelColor};opacity:0.6;flex-shrink:0"></div>Canceled (daily)</div>
-    <div class="trend-leg-item"><div class="trend-leg-line" style="background:${C.annual}"></div>Cumulative Net</div>
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${newColor};opacity:0.8;flex-shrink:0"></div>New Subscription</div>
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${cancelColor};opacity:0.6;flex-shrink:0"></div>Cancellation</div>
+    <div class="trend-leg-item"><div class="trend-leg-line" style="background:${C.annual}"></div>Net Change in Total Subscribers</div>
   </div>`;
 }
 
