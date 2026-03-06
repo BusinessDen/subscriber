@@ -1731,18 +1731,25 @@ function renderGrowthChart(snaps) {
     }
   });
 
-  // Cumulative net line — segmented green (positive) / red (negative)
+  // Cumulative net line — darker shades so it reads against the bar fills
+  const linePos = '#1a8a7a'; // dark teal
+  const lineNeg = '#a03030'; // dark red
+  // Draw shadow/outline first for contrast
+  for(let i = 1; i < n; i++) {
+    svg+=`<line x1="${xC(i-1)}" y1="${yCum(days[i-1].cumNet)}" x2="${xC(i)}" y2="${yCum(days[i].cumNet)}" stroke="#0d0d14" stroke-width="5" stroke-linecap="round"/>`;
+  }
+  // Then the colored line on top
   for(let i = 1; i < n; i++) {
     const prevCum = days[i-1].cumNet;
     const curCum  = days[i].cumNet;
     const midCum  = (prevCum + curCum) / 2;
-    const segColor = midCum >= 0 ? newColor : cancelColor;
-    svg+=`<line x1="${xC(i-1)}" y1="${yCum(prevCum)}" x2="${xC(i)}" y2="${yCum(curCum)}" stroke="${segColor}" stroke-width="2" stroke-linecap="round" opacity="0.9"/>`;
+    const segColor = midCum >= 0 ? linePos : lineNeg;
+    svg+=`<line x1="${xC(i-1)}" y1="${yCum(prevCum)}" x2="${xC(i)}" y2="${yCum(curCum)}" stroke="${segColor}" stroke-width="2.5" stroke-linecap="round"/>`;
   }
   // Dot on first point
   if(n > 0) {
-    const fc = days[0].cumNet >= 0 ? newColor : cancelColor;
-    svg+=`<circle cx="${xC(0)}" cy="${yCum(days[0].cumNet)}" r="2" fill="${fc}" opacity="0.9"/>`;
+    const fc = days[0].cumNet >= 0 ? linePos : lineNeg;
+    svg+=`<circle cx="${xC(0)}" cy="${yCum(days[0].cumNet)}" r="3" fill="${fc}" stroke="#0d0d14" stroke-width="1.5"/>`;
   }
 
   // X date labels — full dates (e.g. "March 5th")
@@ -1756,7 +1763,7 @@ function renderGrowthChart(snaps) {
   // offset well inside the chart to avoid any overlap with the right axis
   const lastCum = days[n - 1].cumNet;
   const lastLbl = lastCum >= 0 ? '+' + lastCum : String(lastCum);
-  const lastColor = lastCum >= 0 ? newColor : cancelColor;
+  const lastColor = lastCum >= 0 ? '#1a8a7a' : '#a03030';
   const lblY = yCum(lastCum);
   // Position the label above the line if near bottom, below if near top
   const lblAbove = lblY > PT + IH * 0.3;
@@ -1774,7 +1781,7 @@ function renderGrowthChart(snaps) {
   el.innerHTML = svg + `<div class="trend-leg" style="justify-content:center">
     <div class="trend-leg-item"><div style="width:10px;height:10px;background:${newColor};opacity:0.8;flex-shrink:0"></div>New Subscription</div>
     <div class="trend-leg-item"><div style="width:10px;height:10px;background:${cancelColor};opacity:0.6;flex-shrink:0"></div>Cancellation</div>
-    <div class="trend-leg-item"><div style="width:16px;height:2px;background:linear-gradient(90deg,${newColor},${cancelColor});flex-shrink:0;border-radius:1px"></div>Net Change in Total Subscribers</div>
+    <div class="trend-leg-item"><div style="width:16px;height:3px;background:linear-gradient(90deg,#1a8a7a,#a03030);flex-shrink:0;border-radius:1px"></div>Net Change in Total Subscribers</div>
   </div>`;
 }
 
