@@ -3,1079 +3,2168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reputation</title>
+<title>Revenue Tracker — BusinessDen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>var _L = L;</script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:17px;-webkit-text-size-adjust:100%}
-body{font-family:'Outfit',-apple-system,sans-serif;background:#08090a;color:#c8cad0;line-height:1.5;min-height:100vh;overflow-x:hidden}
-a{color:#3b82f6;text-decoration:none}a:hover{text-decoration:underline}
-button{font-family:inherit;cursor:pointer}input,select{font-family:inherit}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2d35;border-radius:3px}
+  :root {
+    --bg: #0d0d14;
+    --surface: rgba(255,255,255,0.032);
+    --surface2: rgba(255,255,255,0.055);
+    --surface-hover: rgba(255,255,255,0.06);
+    --gold: #d4aa4f;
+    --gold-dim: rgba(212,170,79,0.55);
+    --gold-glow: rgba(212,170,79,0.08);
+    --gold-border: rgba(212,170,79,0.25);
+    --text: #c8c0cc;
+    --text-muted: #9890a0;
+    --text-dim: #706878;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(212,170,79,0.25);
+    --red: #e05c5c;
+    --green: #5cba8a;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Sora', sans-serif;
+    --c-monthly: #6b9fff;
+    --c-annual: #d4aa4f;
+    --c-corporate: #b07eea;
+    --c-free: #5cbfb0;
+    --c-other: #7a7a8a;
+    --c-event: #e08c5c;
+    --accent: var(--gold);
+    --accent-dim: var(--gold-glow);
+    --accent-border: var(--gold-border);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.5;min-height:100vh;}
 
-#loading-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#08090a;z-index:9999;transition:opacity .4s}
-#loading-screen.fade-out{opacity:0;pointer-events:none}
-.loading-spinner{width:36px;height:36px;border:3px solid #2a2d35;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{margin-top:12px;color:#555;font-size:.85rem}
+  /* Header */
+  .header{border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(13,13,20,0.95);position:sticky;top:0;z-index:200;backdrop-filter:blur(8px);}
+  .logo{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;}
+  .header-title{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);}
+  .header-title span{color:var(--text);}
+  .header-right{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+  .header-right strong{color:var(--text-muted);}
+  .header-left{display:flex;align-items:center;gap:16px;}
 
-.site-header{position:sticky;top:0;z-index:100;background:#08090a;border-bottom:1px solid #1e2028}
-.header-inner{max-width:1400px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.header-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.brand-title{font-size:18px;letter-spacing:-.5px;white-space:nowrap}
-.brand-title .bd{font-weight:400;color:#c8cad0}.brand-title .bd b{font-weight:800}
-.brand-title .tracker{font-weight:500;color:#666;margin-left:6px}
-.tab-group{display:flex;gap:0}
-.tab-btn{padding:10px 20px;font-size:13.5px;font-weight:600;border:none;background:transparent;color:#666;border-bottom:2px solid transparent;transition:all .2s}
-.tab-btn:hover{color:#999}.tab-btn.active{color:#3b82f6;border-bottom-color:#3b82f6}
-.header-updated{font-size:.72rem;color:#555}
+  /* Loading */
+  .loading-bar{height:2px;background:var(--border);overflow:hidden;display:none;}
+  .loading-bar.active{display:block;}
+  .loading-bar-fill{height:100%;background:var(--gold);animation:lb 1.5s ease-in-out infinite;transform-origin:left;}
+  @keyframes lb{0%{transform:scaleX(0)}50%{transform:scaleX(.7) translateX(43%)}100%{transform:scaleX(0) translateX(143%)}}
+  .notice-bar{padding:8px 24px;border-bottom:1px solid rgba(224,92,92,.2);font-family:var(--font-mono);font-size:10px;color:#e08888;background:rgba(224,92,92,.08);display:none;line-height:1.7;}
 
-.main-container{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
-.tab-panel{display:none}.tab-panel.active{display:block}
+  /* Controls */
+  .controls{background:rgba(13,13,20,0.7);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .ctrl-group{display:flex;align-items:center;gap:6px;}
+  .ctrl-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+  .segs{display:flex;}
+  .seg{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;padding:5px 11px;cursor:pointer;transition:all .15s;white-space:nowrap;margin-left:-1px;}
+  .seg:first-child{margin-left:0;}
+  .seg.on{background:var(--gold-glow);border-color:var(--gold-border);color:var(--gold);z-index:1;position:relative;}
+  .seg:hover:not(.on){border-color:rgba(255,255,255,0.15);color:var(--text);}
+  .date-in{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:10px;padding:5px 8px;outline:none;width:112px;}
+  .date-in:focus{border-color:var(--gold-border);}
+  #custom-range{display:none;align-items:center;gap:6px;}
+  .divv{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+  .cmp-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+  .tog{width:28px;height:15px;background:var(--border);border-radius:8px;position:relative;transition:background .15s;cursor:pointer;flex-shrink:0;}
+  .tog::after{content:'';position:absolute;width:11px;height:11px;background:var(--text-dim);border-radius:50%;top:2px;left:2px;transition:all .15s;}
+  .tog.on{background:var(--gold-glow);border:1px solid var(--gold-border);}
+  .tog.on::after{left:15px;background:var(--gold);}
+  .btn-apply{background:var(--gold);color:#0d0d14;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:6px 16px;border:none;cursor:pointer;margin-left:auto;}
+  .btn-apply:hover{opacity:.85;}
+  .btn-apply:disabled{opacity:.4;cursor:default;}
+  #cmp-bar{display:none;background:var(--gold-glow);border-bottom:1px solid var(--gold-border);padding:9px 24px;align-items:center;gap:12px;flex-wrap:wrap;}
+  #cmp-bar .ctrl-label{color:var(--gold);}
+  #custom-range-c{display:none;align-items:center;gap:6px;}
 
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
-.kpi-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:all .2s;cursor:pointer;user-select:none;text-align:center}
-.kpi-card:hover{border-color:#3a3d45}
-.kpi-card.active-filter{border-color:#3b82f6;background:#0f1425}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.kpi-card.blue::before{background:#3b82f6}.kpi-card.amber::before{background:#f5a623}
-.kpi-card.green::before{background:#4caf50}.kpi-card.purple::before{background:#a78bfa}
-.kpi-card.red::before{background:#e85454}
-.kpi-label{font-size:.78rem;color:#999;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px}
-.kpi-value{font-size:1.8rem;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.03em;color:#fff}
-.kpi-sub{font-size:.75rem;color:#666;margin-top:4px}
-.show-all-bar{display:none;margin-bottom:16px;align-items:center;gap:12px}
-.show-all-bar.visible{display:flex}
-.show-all-btn{background:#1a1d25;border:1px solid #3b82f6;color:#3b82f6;padding:6px 16px;border-radius:8px;font-size:.82rem;font-weight:600;transition:all .2s}
-.show-all-btn:hover{background:#0f1425}
-.filter-tag{font-size:.8rem;color:#888}
+  /* Tabs */
+  .tab-bar{background:rgba(13,13,20,0.7);border-bottom:1px solid var(--border);padding:0 24px;display:flex;}
+  .tab-btn{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);padding:11px 16px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.on{color:var(--gold);border-bottom-color:var(--gold);}
 
-/* AI card */
-.ai-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:20px;margin-bottom:20px;border-left:3px solid #3b82f6}
-.ai-card h3{font-size:.85rem;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.ai-card .ai-date{font-size:.72rem;color:#555;font-weight:400}
-.ai-card .ai-body{font-size:.85rem;line-height:1.5;color:#c8cad0}
-.ai-card .ai-body ul{list-style:disc;padding-left:18px;margin:0}
-.ai-card .ai-body li{margin-bottom:.25em;line-height:1.5}
-.ai-card .ai-body p{margin-bottom:.5em}
-.ai-card .ai-body .pub{color:#f5a623;font-weight:700}
-.ai-card .ai-body .story{color:#4caf50;font-weight:700}
-.ai-card .ai-body .neg{color:#e85454;font-weight:600}
-.ai-card.empty .ai-body{color:#555;font-style:italic}
+  /* Content */
+  .main{padding:20px 24px;}
+  .tab-panel{display:none;}
+  .tab-panel.on{display:block;}
 
-/* Chart */
-.chart-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:20px;margin-bottom:20px}
-.chart-card h3{font-size:.85rem;font-weight:600;margin-bottom:16px}
-.chart-area{position:relative}
-.chart-bars{display:flex;align-items:flex-end;gap:2px;height:160px;border-bottom:1px solid #1e2028;position:relative}
-.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;cursor:pointer;gap:1px}
-.chart-col .bar{width:100%;min-width:3px;border-radius:2px 2px 0 0;transition:opacity .15s}
-.chart-col:hover .bar{opacity:.7}
-.bar.gnews{background:#4caf50}.bar.wp{background:#3b82f6}.bar.reddit{background:#f5a623}.bar.medium{background:#a78bfa}
-.bar.bd-pub{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-bottom:none}
-.chart-line-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
-.chart-line-svg polyline{fill:none;stroke:#e85454;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.chart-line-svg circle{fill:#e85454}
-.chart-labels{display:flex;gap:2px;margin-top:8px}
-.chart-labels span{flex:1;font-size:.58rem;color:#444;text-align:center;overflow:hidden}
-.chart-legend{display:flex;gap:14px;margin-top:12px;font-size:.72rem;color:#555;flex-wrap:wrap}
-.chart-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
-.chart-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1d25;border:1px solid #2a2d35;color:#c8cad0;font-size:.7rem;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10}
-.chart-col:hover .chart-tooltip{opacity:1}
+  /* KPI grid */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:20px;}
+  .kpi{background:#0d0d14;padding:18px 20px;position:relative;overflow:hidden;}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--border));}
+  .kpi-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
+  .kpi-val{font-family:var(--font-mono);font-size:26px;font-weight:600;color:var(--text);line-height:1;margin-bottom:4px;}
+  .kpi-val.ac{color:var(--gold);}
+  .kpi-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+  .kpi-delta{font-family:var(--font-mono);font-size:10px;margin-top:5px;}
+  .kpi-delta.up{color:var(--green);} .kpi-delta.dn{color:var(--red);}
 
-/* Layout with sidebar */
-.dash-layout{display:grid;grid-template-columns:1fr 260px;gap:20px}
-@media(max-width:900px){.dash-layout{grid-template-columns:1fr}}
+  /* Layout */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+  @media(max-width:880px){.two-col{grid-template-columns:1fr;}}
 
-/* Sidebar */
-.sidebar-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:16px;margin-bottom:12px}
-.sidebar-card h4{font-size:.78rem;font-weight:600;margin-bottom:10px;color:#888;text-transform:uppercase;letter-spacing:.04em}
-.source-list{list-style:none}
-.source-list li{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.78rem;border-bottom:1px solid #1a1d25;cursor:pointer;transition:color .1s}
-.source-list li:last-child{border-bottom:none}
-.source-list li:hover,.source-list li.active{color:#3b82f6}
-.source-list li.active{font-weight:600}
-.source-list .s-count{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#555}
-.source-list li.active .s-count,.source-list li:hover .s-count{color:#3b82f6}
+  /* Panel */
+  .panel{background:var(--surface);border:1px solid var(--border);margin-bottom:20px;}
+  .panel-hd{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .panel-title{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;}
+  .panel-title span{color:var(--gold);}
+  .panel-body{padding:16px;}
+  .panel-meta{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);}
 
-/* Filters */
-.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.filter-bar input[type="text"],.filter-bar select,.filter-bar input[type="date"]{background:#0d0e12;border:1px solid #1e2028;color:#c8cad0;padding:8px 14px;border-radius:8px;font-size:.85rem;outline:none;transition:border-color .2s}
-.filter-bar input:focus,.filter-bar select:focus{border-color:#3b82f6}
-.filter-bar input[type="text"]{flex:1;min-width:160px}
-.filter-bar select{min-width:120px}.filter-bar select option{background:#0d0e12}
-.filter-bar input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer}
-.filter-label{font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.04em;font-weight:600;white-space:nowrap}
-.result-count{font-size:.8rem;color:#555;margin-left:auto;white-space:nowrap}
+  /* Donut */
+  .donut-wrap{display:flex;align-items:center;gap:20px;}
+  .donut-leg{flex:1;}
+  .leg-item{display:flex;align-items:center;gap:8px;padding:3px 0;}
+  .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .leg-label{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);flex:1;}
+  .leg-val{font-family:var(--font-mono);font-size:11px;color:var(--text);}
+  .leg-pct{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-left:4px;}
 
-/* Table */
-.table-wrapper{overflow-x:auto;border:1px solid #1e2028;border-radius:10px;background:#0d0e12}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-thead th{background:#13151a;color:#555;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;border-bottom:1px solid #1e2028;white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:2;transition:color .15s}
-thead th:hover{color:#999}
-thead th .sort-arrow{margin-left:4px;opacity:.4;font-size:.7rem}
-thead th.sorted .sort-arrow{opacity:1;color:#3b82f6}thead th.sorted{color:#3b82f6}
-tbody tr{border-bottom:1px solid #1e2028;transition:background .15s;cursor:pointer}
-tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#13151a}
-tbody td{padding:10px 14px;white-space:nowrap;max-width:340px;overflow:hidden;text-overflow:ellipsis}
-td.title-cell{max-width:360px;white-space:normal;line-height:1.35}
-td.snippet-cell{max-width:250px;white-space:normal;color:#777;font-size:.8rem;line-height:1.4}
-.mono{font-family:'JetBrains Mono',monospace;font-size:.82rem}
-.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.badge-gnews{background:rgba(76,175,80,.15);color:#4caf50}
-.badge-wp{background:rgba(59,130,246,.15);color:#3b82f6}
-.badge-reddit{background:rgba(245,166,35,.15);color:#f5a623}
-.badge-medium{background:rgba(167,139,250,.15);color:#a78bfa}
-.badge-positive{background:rgba(76,175,80,.15);color:#4caf50}
-.badge-neutral{background:rgba(100,100,120,.15);color:#888}
-.badge-negative{background:rgba(232,84,84,.15);color:#e85454}
-mark{background:rgba(245,166,35,.2);color:#f5a623;padding:0 2px;border-radius:2px}
+  /* Table */
+  .tbl{width:100%;border-collapse:collapse;}
+  .tbl th{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);font-weight:500;position:sticky;top:0;background:#0d0d14;cursor:pointer;user-select:none;white-space:nowrap;}
+  .tbl th:hover{color:var(--text);}
+  .tbl th.sa::after{content:' ▲';color:var(--gold);}
+  .tbl th.sd::after{content:' ▼';color:var(--gold);}
+  .tbl td{font-family:var(--font-mono);font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);white-space:nowrap;}
+  .tbl tr:hover td{background:var(--surface-hover);}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl-wrap{overflow-x:auto;max-height:480px;overflow-y:auto;}
+  .type-pill{display:inline-block;padding:2px 7px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-radius:2px;}
+  .type-badge{display:inline-flex;align-items:center;gap:6px;}
+  .type-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
-/* Detail panel */
-.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
-.detail-overlay.open{opacity:1;pointer-events:auto}
-.detail-panel{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100vw;background:#0d0e12;border-left:1px solid #1e2028;z-index:201;transform:translateX(100%);overflow-y:auto;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 8px 32px rgba(0,0,0,.6)}
-.detail-panel.open{transform:translateX(0)}
-.detail-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #1e2028;position:sticky;top:0;z-index:1;background:#0d0e12}
-.detail-header h2{font-size:1rem;font-weight:600}
-.detail-close{background:none;border:none;color:#666;font-size:1.3rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:all .2s}
-.detail-close:hover{background:#13151a;color:#c8cad0}
-.detail-body{padding:24px}
-.detail-section{margin-bottom:24px}
-.detail-section-title{font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #1e2028}
-.detail-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.85rem}
-.detail-row .label{color:#666}.detail-row .value{color:#c8cad0;font-weight:500;text-align:right;max-width:65%}
-.detail-snippet{background:#13151a;border:1px solid #1e2028;border-radius:8px;padding:16px;font-size:.85rem;line-height:1.65;color:#c8cad0}
-.detail-snippet mark{background:rgba(245,166,35,.25);color:#f5a623;padding:1px 3px;border-radius:2px}
-.detail-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#3b82f6;color:#fff;border-radius:8px;font-size:.82rem;font-weight:600;transition:background .2s;margin-top:4px}
-.detail-link:hover{background:#2563eb;text-decoration:none}
+  /* Summary bars */
+  .sum-bars{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+  .sum-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .sum-lbl{font-family:var(--font-mono);font-size:11px;width:80px;flex-shrink:0;text-align:right;}
+  .sum-track{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+  .sum-fill{height:100%;border-radius:2px;transition:width .4s ease;}
+  .sum-val{font-family:var(--font-mono);font-size:11px;color:var(--text);width:100px;flex-shrink:0;text-align:right;}
 
-/* Stories tab */
-.story-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:18px 20px;margin-bottom:12px}
-.sc-header{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.sc-title{font-size:.95rem;font-weight:600;flex:1;min-width:200px}
-.sc-title a{color:#c8cad0}.sc-title a:hover{color:#3b82f6;text-decoration:none}
-.sc-meta{font-size:.72rem;color:#555;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.sc-author{color:#3b82f6;font-weight:500}
-.sc-reception{background:#13151a;border:1px solid #1e2028;border-radius:8px;padding:12px 14px;font-size:.82rem;line-height:1.6;color:#999;margin-bottom:8px}
-.sc-reception.has-data{color:#c8cad0}
-.sc-reception .pub{color:#f5a623;font-weight:700}
-.sc-reception .story{color:#4caf50;font-weight:700}
-.sc-reception .neg{color:#e85454;font-weight:600}
-.tier-label{font-size:.65rem;color:#555;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:4px}
-.expand-btn{background:none;border:1px solid #1e2028;color:#3b82f6;padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:600;transition:all .2s}
-.expand-btn:hover{background:#13151a;border-color:#3b82f6}
-.ref-list{display:none;margin-top:10px;padding:10px 14px;background:#13151a;border:1px solid #1e2028;border-radius:8px}
-.ref-list.open{display:block}
-.ref-list a{display:block;padding:6px 0;font-size:.82rem;color:#c8cad0;text-decoration:none;border-bottom:1px solid #1a1d25}
-.ref-list a:last-child{border-bottom:none}
-.ref-list a:hover{color:#3b82f6}
-.ref-source{color:#555;font-size:.72rem;display:block}
-.no-pickup{color:#555;font-size:.8rem;font-style:italic;padding:4px 0}
-.stories-filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.stories-filters input,.stories-filters select{background:#0d0e12;border:1px solid #1e2028;color:#c8cad0;padding:7px 12px;border-radius:8px;font-size:.82rem;outline:none}
-.stories-filters input:focus,.stories-filters select:focus{border-color:#3b82f6}
-.stories-filters input{flex:1;min-width:160px}
-.stories-filters select{min-width:120px}
+  /* DCF */
+  .dcf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .dcf-item{padding:14px;background:var(--surface2);border:1px solid var(--border);}
+  .dcf-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .dcf-val{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--gold);}
+  .dcf-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:4px;}
+  .assum-title{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 8px;}
+  .assum-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);gap:8px;}
+  .assum-row:last-child{border-bottom:none;}
+  .assum-lbl{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+  .assum-in{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:4px 8px;width:70px;text-align:right;outline:none;}
+  .assum-in:focus{border-color:var(--gold-border);}
 
-/* Byline */
-.byline-card{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:20px;margin-bottom:16px}
-.byline-card h3{font-size:.95rem;font-weight:600;margin-bottom:4px;color:#3b82f6}
-.byline-stats{font-size:.72rem;color:#555;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap}
-.byline-stat{display:flex;flex-direction:column;gap:1px}
-.byline-stat .bs-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:#c8cad0}
-.byline-stat .bs-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;color:#555}
-.byline-body{font-size:.85rem;line-height:1.7;color:#c8cad0;white-space:pre-line}
+  /* Compare */
+  .cmp-split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:20px;}
+  .cmp-col{background:#0d0d14;padding:16px;}
+  .cmp-col.b{background:var(--gold-glow);}
+  .cmp-col-lbl{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:10px;}
+  .cmp-col.b .cmp-col-lbl{color:var(--gold);}
+  .cmp-row{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
+  .cmp-row:last-child{border-bottom:none;}
+  .cmp-rlbl{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+  .cmp-rval{font-family:var(--font-mono);font-size:12px;color:var(--text);}
+  .cmp-rval.hl{color:var(--gold);}
 
-/* Summaries archive */
-.summary-entry{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;padding:18px 20px;margin-bottom:12px}
-.summary-entry h4{font-size:.85rem;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
-.se-type{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase}
-.se-type.daily{background:rgba(59,130,246,.15);color:#3b82f6}
-.se-type.weekly{background:rgba(245,166,35,.15);color:#f5a623}
-.se-type.monthly{background:rgba(167,139,250,.15);color:#a78bfa}
-.se-body{font-size:.85rem;line-height:1.5;color:#c8cad0;margin-top:8px}
-.se-body ul{list-style:disc;padding-left:18px;margin:0}
-.se-body li{margin-bottom:.25em;line-height:1.5}
-.se-body p{margin-bottom:.5em}
-.se-body .pub{color:#f5a623;font-weight:700}
-.se-body .story{color:#4caf50;font-weight:700}
-.se-body .neg{color:#e85454;font-weight:600}
+  /* Trend */
+  .trend-wrap{padding:16px;}
+  .trend-leg{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;}
+  .trend-leg-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+  .trend-leg-line{width:16px;height:2px;}
 
-.empty-state{text-align:center;padding:60px 20px;color:#555}.empty-state p{font-size:.9rem}
-.site-footer{max-width:1400px;margin:0 auto;padding:20px 24px;border-top:1px solid #1e2028;font-size:.72rem;color:#555;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  /* Churn specific */
+  .tenure-bar-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+  .tenure-bar-row:last-child{border-bottom:none;}
+  .tenure-type{font-family:var(--font-mono);font-size:11px;width:80px;flex-shrink:0;}
+  .tenure-track{flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
+  .tenure-fill{height:100%;border-radius:2px;}
+  .tenure-val{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text);width:70px;text-align:right;flex-shrink:0;}
+  .tenure-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);width:100px;text-align:right;flex-shrink:0;}
 
-@media(max-width:768px){
-html{font-size:14px}.header-inner{padding:12px 16px}.brand-title{font-size:16px}
-.main-container{padding:14px 12px 40px}.kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}.kpi-value{font-size:1.2rem}
-.tab-btn{padding:8px 10px;font-size:.72rem}
-.filter-bar{gap:8px}.filter-bar input[type="text"]{min-width:0;width:100%}.filter-bar select{flex:1;min-width:0}
-.filter-label{display:none}.result-count{margin-left:0;width:100%;text-align:center}
-.detail-panel{width:100vw}
-.table-wrapper{border:none;background:transparent;overflow:visible}
-table,thead,tbody,tr,th,td{display:block}thead{display:none}
-tbody tr{background:#0d0e12;border:1px solid #1e2028;border-radius:10px;margin-bottom:10px;padding:14px 16px}
-tbody td{padding:3px 0;white-space:normal;max-width:none;display:flex;justify-content:space-between;align-items:baseline}
-tbody td::before{content:attr(data-label);font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.04em;font-weight:600;min-width:70px;flex-shrink:0}
-tbody td:first-child{font-weight:600;margin-bottom:6px;border-bottom:1px solid #1e2028;padding-bottom:8px}
-.site-footer{padding:16px 12px;flex-direction:column;text-align:center}
-}
-@media(max-width:400px){.kpi-grid{grid-template-columns:1fr}}
+  .ltv-card{padding:14px;background:var(--surface2);border:1px solid var(--border);position:relative;}
+  .ltv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--lc,var(--border));}
+  .ltv-type{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+  .ltv-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border);}
+  .ltv-row:last-child{border-bottom:none;}
+  .ltv-rlbl{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+  .ltv-rval{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--gold);}
+  .ltv-rval.muted{color:var(--text-muted);font-size:12px;font-weight:400;}
+  .cohort-note{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);padding:12px 0 0;line-height:1.8;}
+
+  /* Table controls */
+  .tbl-controls{padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+  /* Map */
+  .map-panel{background:var(--surface);border:1px solid var(--border);margin-bottom:20px;}
+  #subscriber-map{width:100%;height:460px;background:#0d0d14;}
+  .map-footer{padding:8px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .map-leg{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .map-leg-item{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;}
+  .map-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .map-status{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+  .btn-sm{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer;transition:all .15s;}
+  .btn-sm:hover{border-color:var(--gold-border);color:var(--gold);}
+  .btn-sm.on{background:var(--gold-glow);border-color:var(--gold-border);color:var(--gold);}
+
+  /* Leaflet */
+  .leaflet-container{background:#0d0d14 !important;font-family:var(--font-mono) !important;}
+  .leaflet-popup-content-wrapper{background:#181820 !important;border:1px solid var(--border) !important;border-radius:0 !important;box-shadow:0 4px 20px rgba(0,0,0,.8) !important;padding:0 !important;}
+  .leaflet-popup-content{margin:0 !important;color:var(--text) !important;font-family:var(--font-mono) !important;font-size:11px !important;line-height:1.5 !important;min-width:200px;}
+  .leaflet-popup-tip-container{display:none !important;}
+  .leaflet-popup-close-button{color:var(--text-muted) !important;font-size:16px !important;top:6px !important;right:8px !important;}
+  .leaflet-popup-close-button:hover{color:var(--gold) !important;}
+  .leaflet-control-zoom a{background:#181820 !important;border-color:var(--border) !important;color:var(--text-muted) !important;}
+  .leaflet-control-zoom a:hover{color:var(--gold) !important;}
+  .leaflet-control-attribution{background:rgba(13,13,20,.8) !important;color:var(--text-dim) !important;font-size:9px !important;}
+  .leaflet-control-attribution a{color:var(--text-dim) !important;}
+  .map-pop{padding:12px 14px;}
+  .map-pop-type{font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .map-pop-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:5px;margin-top:4px;}
+  .map-pop-row span:last-child{color:var(--text);}
+
+  /* Chart filter mini-buttons */
+  .chart-filters{display:flex;gap:4px;flex-wrap:wrap;}
+  .cf-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:9px;padding:3px 8px;cursor:pointer;transition:all .15s;letter-spacing:.04em;}
+  .cf-btn:hover{border-color:var(--gold-border);color:var(--gold);}
+  .cf-btn.on{background:var(--gold-glow);border-color:var(--gold-border);color:var(--gold);}
+
+  /* Forecasting */
+  .forecast-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:20px;}
+
+  /* Empty */
+  .empty{text-align:center;padding:48px 24px;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;line-height:2;}
+  .empty .big{font-size:32px;color:var(--border);margin-bottom:8px;}
+
+  .footer{text-align:center;padding:20px 24px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:8px;letter-spacing:.05em;}
 </style>
 </head>
 <body>
 
-<div id="loading-screen"><div class="loading-spinner"></div><div class="loading-text">Loading Reputation…</div></div>
-
-<header class="site-header"><div class="header-inner">
+<div class="header">
   <div class="header-left">
-    <div class="brand-title"><span class="bd"><b>Business</b>Den</span><span class="tracker">Reputation</span></div>
-    <div class="tab-group">
-      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-      <button class="tab-btn" data-tab="stories">Our Stories</button>
-      <button class="tab-btn" data-tab="byline">Byline</button>
-      <button class="tab-btn" data-tab="summaries">Daily Summaries</button>
+    <div class="logo">BusinessDen</div>
+    <div class="header-title">// <span>Revenue Tracker</span></div>
+  </div>
+  <div class="header-right" id="freshness">Loading...</div>
+</div>
+
+<div class="notice-bar" id="notice-bar"></div>
+<div class="loading-bar" id="loading-bar"><div class="loading-bar-fill"></div></div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Period</span>
+    <div class="segs" id="period-btns">
+      <button class="seg on" data-p="ytd">YTD</button>
+      <button class="seg" data-p="last_year">Last Year</button>
+      <button class="seg" data-p="month">This Month</button>
+      <button class="seg" data-p="week">This Week</button>
+      <button class="seg" data-p="today">Today</button>
+      <button class="seg" data-p="custom">Custom</button>
     </div>
   </div>
-  <div class="header-updated" id="lastUpdated"></div>
-</div></header>
-
-<main class="main-container">
-
-<!-- ═══ TAB 1: DASHBOARD ═══ -->
-<div class="tab-panel active" id="panel-dashboard">
-  <div class="kpi-grid">
-    <div class="kpi-card amber" data-kpi="today"><div class="kpi-label">New Today</div><div class="kpi-value" id="kNew">–</div><div class="kpi-sub">last run</div></div>
-    <div class="kpi-card blue" data-kpi="all"><div class="kpi-label">Total Mentions</div><div class="kpi-value" id="kTotal">–</div><div class="kpi-sub">all time</div></div>
-    <div class="kpi-card green" data-kpi="articles"><div class="kpi-label">BD Articles</div><div class="kpi-value" id="kArticles">–</div><div class="kpi-sub">tracked</div></div>
-    <div class="kpi-card purple"><div class="kpi-label">Avg. Mentions / Article</div><div class="kpi-value" id="kAvgMentions">–</div><div class="kpi-sub">per BD article</div></div>
-    <div class="kpi-card blue" data-kpi="sources7d"><div class="kpi-label">Sources (7 Days)</div><div class="kpi-value" id="kSources7d">–</div><div class="kpi-sub">unique outlets</div></div>
+  <div id="custom-range">
+    <input type="date" class="date-in" id="d-from"/>
+    <span style="color:var(--text-muted);font-size:10px">→</span>
+    <input type="date" class="date-in" id="d-to"/>
   </div>
-
-  <div class="show-all-bar" id="showAllBar">
-    <button class="show-all-btn" id="showAllBtn">Show All</button>
-    <span class="filter-tag" id="filterTag"></span>
-  </div>
-
-  <div id="dailySummary"></div>
-
-  <div class="chart-card">
-    <h3>Mentions Over Time <span style="font-weight:400;color:#555;font-size:.75rem">(30 days)</span></h3>
-    <div class="chart-area">
-      <div class="chart-bars" id="chartBars"></div>
-      <svg class="chart-line-svg" id="chartLine" preserveAspectRatio="none"></svg>
-    </div>
-    <div class="chart-labels" id="chartLabels"></div>
-    <div class="chart-legend">
-      <span><i style="background:#4caf50"></i> Google News</span>
-      <span><i style="background:#3b82f6"></i> WordPress</span>
-      <span><i style="background:#f5a623"></i> Reddit</span>
-      <span><i style="background:#a78bfa"></i> Medium</span>
-      <span><i style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3)"></i> BD Published</span>
-      <span><i style="background:#e85454;border-radius:50%"></i> 30-Day Avg</span>
+  <div class="divv"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Type</span>
+    <div class="segs" id="type-btns">
+      <button class="seg on" data-t="all">All</button>
+      <button class="seg" data-t="monthly">Monthly</button>
+      <button class="seg" data-t="annual">Annual</button>
+      <button class="seg" data-t="corporate">Corporate</button>
+      <button class="seg" data-t="event">Events</button>
     </div>
   </div>
+  <div class="divv"></div>
+  <div class="cmp-toggle" onclick="toggleCmp()">
+    <div class="tog" id="cmp-tog"></div>
+    <span class="ctrl-label">Compare</span>
+  </div>
+  <button class="btn-apply" id="apply-btn" onclick="applyFilters()">Apply</button>
+</div>
 
-  <div class="chart-card">
-    <h3>Outlet Pickup <span style="font-weight:400;color:#666;font-size:.75rem" id="outletChartScope">all time</span></h3>
-    <div style="overflow-x:auto">
-      <div id="outletChartBars" style="display:flex;align-items:flex-end;gap:3px;height:140px;border-bottom:1px solid #1e2028;min-width:0"></div>
-      <div id="outletChartLabels" style="display:flex;gap:3px;margin-top:6px"></div>
-    </div>
-    <div class="chart-legend" style="margin-top:10px">
-      <span><i style="background:#3b82f6"></i> Syndication (BD byline)</span>
-      <span><i style="background:#f5a623"></i> Reference (other byline)</span>
-    </div>
+<div id="cmp-bar">
+  <span class="ctrl-label">Compare To</span>
+  <div class="segs" id="cmp-period-btns">
+    <button class="seg on" data-cp="prev_period">Prior Period</button>
+    <button class="seg" data-cp="prev_year">Prior Year</button>
+    <button class="seg" data-cp="custom_c">Custom</button>
+  </div>
+  <div id="custom-range-c">
+    <input type="date" class="date-in" id="d-from-c"/>
+    <span style="color:var(--text-muted);font-size:10px">→</span>
+    <input type="date" class="date-in" id="d-to-c"/>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn on"  data-tab="overview"    onclick="switchTab('overview')">Overview</button>
+  <button class="tab-btn"     data-tab="payments"    onclick="switchTab('payments')">Payments</button>
+  <button class="tab-btn"     data-tab="churn"       onclick="switchTab('churn')">Churn & Retention</button>
+  <button class="tab-btn"     data-tab="trends"      onclick="switchTab('trends')">Trends</button>
+  <button class="tab-btn"     data-tab="forecasting" onclick="switchTab('forecasting')">Forecasting</button>
+  <button class="tab-btn"     data-tab="map"         onclick="switchTab('map')">Map</button>
+</div>
+
+<div class="main">
+
+  <!-- OVERVIEW -->
+  <div class="tab-panel on" id="tab-overview">
+    <div id="overview-body"><div class="empty"><div class="big">◈</div>Loading...</div></div>
   </div>
 
-  <div class="dash-layout">
-    <div>
-      <div class="filter-bar">
-        <span class="filter-label">Search</span>
-        <input type="text" id="fSearch" placeholder="Filter by title, source, snippet…">
-        <span class="filter-label">Via</span>
-        <select id="fVia"><option value="">All</option><option value="google_news_rss">Google News</option><option value="wordpress_api">WordPress</option><option value="reddit_rss">Reddit</option><option value="medium_rss">Medium</option></select>
-        <span class="filter-label">Sentiment</span>
-        <select id="fSentiment"><option value="">All</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select>
-        <span class="filter-label">From</span>
-        <input type="date" id="fDateFrom">
-        <span class="filter-label">To</span>
-        <input type="date" id="fDateTo">
-        <span class="result-count" id="resultCount"></span>
+  <!-- PAYMENTS -->
+  <div class="tab-panel" id="tab-payments">
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-hd">
+        <div class="panel-title">Payments — <span id="pay-period-lbl">All Time</span></div>
+        <div class="panel-meta" id="pay-meta"></div>
       </div>
-      <div class="table-wrapper"><table>
-        <thead><tr>
-          <th data-col="published" class="sorted">Date <span class="sort-arrow">▼</span></th>
-          <th data-col="source">Source <span class="sort-arrow">▼</span></th>
-          <th data-col="title">Title <span class="sort-arrow">▼</span></th>
-          <th data-col="snippet">Context <span class="sort-arrow">▼</span></th>
-          <th data-col="sentiment">Sentiment <span class="sort-arrow">▼</span></th>
-          <th data-col="found_via">Via <span class="sort-arrow">▼</span></th>
-        </tr></thead>
-        <tbody id="tableBody"><tr><td colspan="6" class="empty-state"><p>Loading…</p></td></tr></tbody>
-      </table></div>
-    </div>
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-card"><h4>Top Sources</h4><ul class="source-list" id="sourceList"></ul></div>
-      <div class="sidebar-card"><h4>By Method</h4><ul class="source-list" id="methodList"></ul></div>
+      <div class="sum-bars" id="pay-summary"></div>
+      <div class="tbl-controls">
+        <span class="ctrl-label">Type</span>
+        <div class="segs" id="pay-type-btns">
+          <button class="seg on" data-pf="all"       onclick="setPayFilter('all')">All</button>
+          <button class="seg"    data-pf="monthly"   onclick="setPayFilter('monthly')">Monthly</button>
+          <button class="seg"    data-pf="annual"    onclick="setPayFilter('annual')">Annual</button>
+          <button class="seg"    data-pf="corporate" onclick="setPayFilter('corporate')">Corporate</button>
+          <button class="seg"    data-pf="event"     onclick="setPayFilter('event')">Events</button>
+          <button class="seg"    data-pf="other"     onclick="setPayFilter('other')">Other</button>
+        </div>
+        <span style="margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim)" id="pay-count"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th onclick="sortPay('date')" id="pth-date">Date</th>
+            <th onclick="sortPay('total')" id="pth-total" style="text-align:right">Total Revenue</th>
+            <th onclick="sortPay('count')" id="pth-count" style="text-align:right">Payments</th>
+            <th style="text-align:right">Monthly</th>
+            <th style="text-align:right">Annual</th>
+            <th style="text-align:right">Corporate</th>
+            <th style="text-align:right">Events</th>
+            <th style="text-align:right">Free</th>
+            <th style="text-align:right">Other</th>
+          </tr></thead>
+          <tbody id="pay-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ═══ TAB 2: OUR STORIES ═══ -->
-<div class="tab-panel" id="panel-stories">
-  <div class="chart-card">
-    <h3>Articles Published <span style="font-weight:400;color:#555;font-size:.75rem">(30 days, by topic)</span></h3>
-    <div class="chart-bars" id="storiesChartBars" style="height:120px"></div>
-    <div class="chart-labels" id="storiesChartLabels"></div>
-    <div class="chart-legend" id="storiesChartLegend"></div>
+  <!-- CHURN & RETENTION -->
+  <div class="tab-panel" id="tab-churn">
+    <div id="churn-body"><div class="empty"><div class="big">◈</div>Loading...</div></div>
   </div>
-  <div class="stories-filters">
-    <input type="text" id="sfSearch" placeholder="Search articles…">
-    <select id="sfAuthor"><option value="">All reporters</option></select>
-    <select id="sfPickup"><option value="">All articles</option><option value="yes">Picked up</option><option value="no">Not picked up</option></select>
-    <select id="sfSort1">
-      <option value="rank-desc">Sort: Ranking (high → low)</option>
-      <option value="rank-asc">Ranking (low → high)</option>
-      <option value="date-desc">Date (newest first)</option>
-      <option value="date-asc">Date (oldest first)</option>
-      <option value="author-asc">Author (A → Z)</option>
-      <option value="author-desc">Author (Z → A)</option>
-      <option value="title-asc">Title (A → Z)</option>
-      <option value="title-desc">Title (Z → A)</option>
-    </select>
-    <select id="sfSort2">
-      <option value="">Then by…</option>
-      <option value="rank-desc">Ranking (high → low)</option>
-      <option value="rank-asc">Ranking (low → high)</option>
-      <option value="date-desc">Date (newest first)</option>
-      <option value="date-asc">Date (oldest first)</option>
-      <option value="author-asc">Author (A → Z)</option>
-      <option value="author-desc">Author (Z → A)</option>
-      <option value="title-asc">Title (A → Z)</option>
-      <option value="title-desc">Title (Z → A)</option>
-    </select>
-  </div>
-  <div id="storiesList"><div class="empty-state"><p>Loading…</p></div></div>
-</div>
 
-<!-- ═══ TAB 3: BYLINE ═══ -->
-<div class="tab-panel" id="panel-byline">
-  <div id="bylineContent"><div class="empty-state"><p>Loading…</p></div></div>
-</div>
-
-<!-- ═══ TAB 4: DAILY SUMMARIES ═══ -->
-<div class="tab-panel" id="panel-summaries">
-  <div id="summariesList"><div class="empty-state"><p>Loading…</p></div></div>
-</div>
-
-</main>
-
-<div class="detail-overlay" id="detailOverlay"></div>
-<div class="detail-panel" id="detailPanel">
-  <div class="detail-header"><h2>Mention Detail</h2><button class="detail-close" id="detailClose">✕</button></div>
-  <div class="detail-body">
-    <div class="detail-section">
-      <div class="detail-section-title">Article</div>
-      <div class="detail-row"><span class="label">Title</span><span class="value" id="dTitle"></span></div>
-      <div class="detail-row"><span class="label">Source</span><span class="value" id="dSource"></span></div>
-      <div class="detail-row"><span class="label">Domain</span><span class="value" id="dDomain"></span></div>
-      <div class="detail-row"><span class="label">Published</span><span class="value" id="dDate"></span></div>
-      <div class="detail-row"><span class="label">Sentiment</span><span class="value" id="dSentiment"></span></div>
-      <div class="detail-row"><span class="label">Found via</span><span class="value" id="dVia"></span></div>
-      <div class="detail-row"><span class="label">First seen</span><span class="value" id="dSeen"></span></div>
+  <!-- TRENDS -->
+  <div class="tab-panel" id="tab-trends">
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">MRR — <span>Monthly Recurring Revenue</span></div></div>
+      <div class="trend-wrap" id="trend-mrr"></div>
     </div>
-    <div class="detail-section">
-      <div class="detail-section-title">How BusinessDen Was Mentioned</div>
-      <div class="detail-snippet" id="dSnippet"></div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">Subscribers — <span>Active by Type</span></div></div>
+      <div class="trend-wrap" id="trend-subs"></div>
     </div>
-    <div class="detail-section"><a class="detail-link" id="dLink" href="#" target="_blank" rel="noopener">View Original Article →</a></div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">Growth — <span>Daily New & Canceled + Cumulative Net</span></div></div>
+      <div class="trend-wrap" id="trend-churn"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">Median Tenure — <span>Days to Cancellation, Start vs End of Period</span></div></div>
+      <div class="trend-wrap" id="trend-tenure"></div>
+    </div>
   </div>
-</div>
 
-<footer class="site-footer"><span>Powered by Google News RSS · WordPress API · Reddit · Medium</span><span>Updated daily at 5 AM MT</span></footer>
+  <!-- FORECASTING -->
+  <div class="tab-panel" id="tab-forecasting">
+    <div id="forecasting-body"><div class="empty"><div class="big">◈</div>Loading...</div></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="tab-panel" id="tab-map">
+    <div class="map-panel">
+      <div class="panel-hd">
+        <div class="panel-title">Subscriber Map — <span>Billing Locations</span></div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn-sm on"  id="mf-all"       onclick="setMapFilter('all')">All Active</button>
+          <button class="btn-sm"     id="mf-monthly"   onclick="setMapFilter('monthly')">Monthly</button>
+          <button class="btn-sm"     id="mf-free"      onclick="setMapFilter('free')">Free</button>
+          <button class="btn-sm"     id="mf-annual"    onclick="setMapFilter('annual')">Annual</button>
+          <button class="btn-sm"     id="mf-corporate" onclick="setMapFilter('corporate')">Corporate</button>
+          <button class="btn-sm"     id="mf-canceled"  onclick="setMapFilter('canceled')">Lapsed</button>
+        </div>
+      </div>
+      <div id="subscriber-map"></div>
+      <div class="map-footer">
+        <div class="map-leg">
+          <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--c-monthly)"></div>Monthly</div>
+          <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--c-annual)"></div>Annual</div>
+          <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--c-corporate)"></div>Corporate</div>
+          <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--c-free)"></div>Free</div>
+          <div class="map-leg-item"><div class="map-leg-dot" style="background:#555"></div>Lapsed</div>
+        </div>
+        <div class="map-status" id="map-status">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">BUSINESSDEN REVENUE TRACKER · data/ DIRECTORY · ZERO SERVER COST</div>
 
 <script>
-let D={},mentions=[],bdArticles=[],sortCol='published',sortDir='desc',kpiFilter=null,sidebarSource='';
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let allSubs=[], allPayments=[], allSnapshots=[];
+let period='ytd', subType='all';
+let cmpEnabled=false, cmpPeriod='prev_period';
+let payFilter='all', paySort={col:'date',dir:'desc'};
+let mapFilter='all', leafMap=null, mapCluster=[], _mapPoints=[];
+let payCache=[];
+let dcf={dr:10,mc:3,ac:8,cc:5};
 
-async function init(){
-  try{const r=await fetch('mentions-data.json?_='+Date.now());D=await r.json();mentions=D.mentions||[];bdArticles=D.bd_articles||[];renderAll();}
-  catch(e){document.getElementById('tableBody').innerHTML='<tr><td colspan="6" class="empty-state"><p>Failed to load data</p></td></tr>';}
-  document.getElementById('loading-screen').classList.add('fade-out');
-  setTimeout(()=>document.getElementById('loading-screen').style.display='none',500);
+const C={monthly:'#6b9fff',annual:'#d4aa4f',corporate:'#b07eea',free:'#5cbfb0',other:'#7a7a8a',event:'#e08c5c'};
+const LBL={monthly:'Monthly',annual:'Annual',corporate:'Corporate',free:'Free',other:'Other',event:'Event'};
+
+// ════════════════════════════════════════════════
+// LOAD
+// ════════════════════════════════════════════════
+async function init() {
+  setLoading(true);
+  try {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({length: currentYear - 2019}, (_, i) => currentYear - i);
+    const payFetches = years.map(y =>
+      fetch(`data/payments_${y}.json`).then(r => r.ok ? r.json() : null).catch(() => null)
+    );
+    const [s, sn, ...payResults] = await Promise.all([
+      fetch('data/subscribers.json').then(r=>{if(!r.ok)throw new Error('subscribers.json not found');return r.json();}),
+      fetch('data/snapshots.json').then(r=>{if(!r.ok)throw new Error('snapshots.json not found');return r.json();}),
+      ...payFetches,
+    ]);
+    allSubs      = s.subscribers || [];
+    allSnapshots = sn.snapshots  || [];
+    allPayments  = payResults
+      .filter(Boolean)
+      .flatMap(p => p.payments || [])
+      .sort((a, b) => b.timestamp - a.timestamp);
+    if (!allPayments.length) throw new Error('No payments_YYYY.json files found');
+    document.getElementById('freshness').innerHTML =
+      s.generated_at ? `<strong>Updated:</strong> ${new Date(s.generated_at).toLocaleString()}` : '';
+    applyFilters();
+    const{from:initFrom,to:initTo}=getRange(period);
+    renderTrends(initFrom, initTo);
+    renderForecasting();
+  } catch(e) {
+    notice(`⚠ ${e.message} — Run: python scraper.py then: python -m http.server 8000`);
+    document.getElementById('overview-body').innerHTML=`<div class="empty"><div class="big">⚠</div>
+      No data in <strong style="color:var(--gold)">data/</strong> directory.<br>
+      <code style="color:var(--gold)">python scraper.py</code><br>
+      <code style="color:var(--gold)">python -m http.server 8000</code></div>`;
+  } finally { setLoading(false); }
 }
 
-function renderAll(){
-  renderKPIs();renderDailySummary();renderChart();renderOutletChart();renderTable();renderSidebar();
-  renderStories();renderByline();renderSummariesTab();
-  if(D.last_updated)document.getElementById('lastUpdated').textContent='Updated '+new Date(D.last_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
-}
-
-// ═══ TABS ═══
-document.querySelectorAll('.tab-btn').forEach(b=>{b.addEventListener('click',()=>{
-  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');document.getElementById('panel-'+b.dataset.tab).classList.add('active');
-});});
-
-// ═══ KPIs + KPI FILTER (#6) ═══
-function renderKPIs(){
-  document.getElementById('kTotal').textContent=mentions.length;
-  // New Today = mentions first seen since midnight Mountain Time
-  const mtNow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Denver'}));
-  const midnightMT=new Date(mtNow.getFullYear(),mtNow.getMonth(),mtNow.getDate()).toISOString();
-  const newToday=mentions.filter(m=>(m.first_seen||'')>=midnightMT).length;
-  document.getElementById('kNew').textContent=newToday;
-  document.getElementById('kArticles').textContent=bdArticles.length;
-  document.getElementById('kAvgMentions').textContent=bdArticles.length?(mentions.length/bdArticles.length).toFixed(1):'–';
-  const cutoff7d=new Date(Date.now()-7*86400000).toISOString();
-  const recent=mentions.filter(m=>(m.published||'')>=cutoff7d);
-  document.getElementById('kSources7d').textContent=new Set(recent.map(m=>m.source_domain)).size;
-}
-document.querySelectorAll('.kpi-card[data-kpi]').forEach(c=>{c.addEventListener('click',()=>{
-  const k=c.dataset.kpi;
-  kpiFilter=(kpiFilter===k||k==='all')?null:k;
-  document.querySelectorAll('.kpi-card').forEach(x=>x.classList.remove('active-filter'));
-  if(kpiFilter)c.classList.add('active-filter');
-  const bar=document.getElementById('showAllBar'),tag=document.getElementById('filterTag');
-  if(kpiFilter){bar.classList.add('visible');const labels={today:'New today',articles:'BD articles',sources7d:'Sources (7 days)'};tag.textContent='Showing: '+(labels[kpiFilter]||kpiFilter);}
-  else bar.classList.remove('visible');
-  renderTable();
-});});
-document.getElementById('showAllBtn').addEventListener('click',()=>{kpiFilter=null;document.querySelectorAll('.kpi-card').forEach(x=>x.classList.remove('active-filter'));document.getElementById('showAllBar').classList.remove('visible');renderTable();});
-
-// ═══ DAILY SUMMARY ═══
-function formatSummary(text){
-  if(!text)return'';
-
-  // Step 1: Clean raw text BEFORE any HTML processing
-  let raw=text;
-  raw=raw.replace(/\*\*([^*]+)\*\*/g,'$1');   // strip **bold**
-  raw=raw.replace(/---+/g,'');                  // strip horizontal rules
-
-  const pubs=['The Denver Post','Denver Post','Denverite','9News','Denver Gazette',
-    'Colorado Springs Gazette','Hoodline','Axios','Denver7','Colorado Hometown Weekly',
-    'Boulder Daily Camera','Longmont Times-Call','Greeley Tribune','Westword',
-    'Colorado Public Radio','CPR News','Fort Collins Coloradoan','Colorado Sun',
-    'Richmond BizSense','Reddit Denver','Reddit','Medium','LinkedIn','Facebook',
-    'Instagram','x.com','MassLive.com','Broomfield Enterprise','Loveland Reporter-Herald',
-    'Fort Morgan Times','Sterling Journal-Advocate','Estes Park Trail-Gazette',
-    'Canon City Daily Record','WesternSlopeNow','Wire hub','SCNG','San Diego Union-Tribune'];
-
-  const negWords=['negative','critical','criticism','disputed','corrected','pushed back',
-    'took issue','challenged','inaccurate','misleading','error','retraction','backlash'];
-
-  // Step 2: Process line by line
-  const lines=raw.split('\n');
-  let inList=false,out='';
-
-  for(const line of lines){
-    const trimmed=line.trim();
-    if(!trimmed)continue;
-    const isBullet=/^[•\-\*]\s/.test(trimmed);
-    let content=isBullet?trimmed.replace(/^[•\-\*]\s+/,''):trimmed;
-
-    // Step 3: Escape HTML special chars
-    content=content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    // Step 4: Wrap publication names in orange (longest match first to avoid partial matches)
-    const sortedPubs=[...pubs].sort((a,b)=>b.length-a.length);
-    for(const p of sortedPubs){
-      const esc=p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      content=content.replace(new RegExp('(?<![\\w>])'+esc+'(?!\\w)','gi'),
-        '<span class="pub">$&</span>');
-    }
-
-    // Step 5: Wrap quoted text in green
-    content=content.replace(/&quot;([^&]{6,}?)&quot;/g,
-      '&quot;<span class="story">$1</span>&quot;');
-    content=content.replace(/\u201c([^\u201d]{6,}?)\u201d/g,
-      '\u201c<span class="story">$1</span>\u201d');
-
-    // Step 6: Highlight negative language in red
-    for(const nw of negWords){
-      content=content.replace(new RegExp('\\b('+nw+')\\b','gi'),
-        '<span class="neg">$1</span>');
-    }
-
-    if(isBullet){
-      if(!inList){out+='<ul>';inList=true;}
-      out+='<li>'+content+'</li>';
-    }else{
-      if(inList){out+='</ul>';inList=false;}
-      out+='<p>'+content+'</p>';
-    }
+// ════════════════════════════════════════════════
+// DATE HELPERS
+// ════════════════════════════════════════════════
+function getRange(p) {
+  const now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if(p==='ytd')       return {from:new Date(now.getFullYear(),0,1),to:today};
+  if(p==='last_year') {const y=now.getFullYear()-1;return{from:new Date(y,0,1),to:new Date(y,11,31)};}
+  if(p==='month')     return {from:new Date(now.getFullYear(),now.getMonth(),1),to:today};
+  if(p==='week')      {const d=new Date(today);d.setDate(d.getDate()-d.getDay());return{from:d,to:today};}
+  if(p==='today')     return {from:today,to:today};
+  if(p==='custom') {
+    const f=document.getElementById('d-from').value,t=document.getElementById('d-to').value;
+    return {from:f?new Date(f):today,to:t?new Date(t):today};
   }
-  if(inList)out+='</ul>';
-  return out;
+  return {from:today,to:today};
+}
+function getCmpRange(from,to) {
+  const span=to-from;
+  if(cmpPeriod==='prev_period'){const t2=new Date(from-86400000);return{from:new Date(t2-span),to:t2};}
+  if(cmpPeriod==='prev_year')  return{from:new Date(from.getFullYear()-1,from.getMonth(),from.getDate()),to:new Date(to.getFullYear()-1,to.getMonth(),to.getDate())};
+  const f=document.getElementById('d-from-c').value,t=document.getElementById('d-to-c').value,n=new Date();
+  return{from:f?new Date(f):n,to:t?new Date(t):n};
+}
+const ds=d=>{if(!(d instanceof Date))return String(d||'').slice(0,10);const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${dd}`;};
+const dsYM=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0');return`${y}-${m}`;};
+const inR=(date,from,to)=>{const d=ds(new Date(date)).slice(0,10);return d>=ds(from)&&d<=ds(to);};
+
+// ════════════════════════════════════════════════
+// ANALYSIS
+// ════════════════════════════════════════════════
+function analyzePay(from,to,tf) {
+  const pays=allPayments.filter(p=>inR(p.date,from,to)&&(tf==='all'||p.type===tf));
+  const total=pays.reduce((s,p)=>s+p.amount,0);
+  const byType={};
+  pays.forEach(p=>{byType[p.type]=byType[p.type]||{count:0,amount:0};byType[p.type].count++;byType[p.type].amount+=p.amount;});
+  return{pays,total,byType};
 }
 
-function renderDailySummary(){
-  const el=document.getElementById('dailySummary');
-  const dailies=(D.summaries&&D.summaries.daily)||[];
-  if(!dailies.length){el.innerHTML='<div class="ai-card empty"><h3>Today\'s Summary</h3><div class="ai-body">AI daily summaries will appear once the Claude API key is configured.</div></div>';return;}
-  const latest=dailies[dailies.length-1];
-  el.innerHTML='<div class="ai-card"><h3>Today\'s Summary <span class="ai-date">'+fmtDate(latest.date)+'</span></h3><div class="ai-body">'+formatSummary(latest.text)+'</div></div>';
+function analyzeSubs(tf) {
+  const active=allSubs.filter(s=>s.status==='active'&&(tf==='all'||s.type===tf));
+  const counts={monthly:0,annual:0,corporate:0,free:0,other:0};
+  let mrr=0;
+  active.forEach(s=>{counts[s.type]=(counts[s.type]||0)+1;if(s.type!=='free')mrr+=s.interval==='year'?s.amount/12:s.amount;});
+  return{active,counts,total:active.length,mrr:Math.round(mrr*100)/100,arr:Math.round(mrr*12*100)/100};
 }
 
-// ═══ CHART ═══
-function renderChart(){
-  // Build per-date data for mentions
-  const byDate={};
-  mentions.forEach(m=>{
-    if(!m.published)return;
-    const d=m.published.split('T')[0];
-    if(!byDate[d])byDate[d]={gnews:0,wp:0,reddit:0,medium:0,bdPub:0};
-    if(m.found_via==='google_news_rss')byDate[d].gnews++;
-    else if(m.found_via==='wordpress_api')byDate[d].wp++;
-    else if(m.found_via==='reddit_rss')byDate[d].reddit++;
-    else if(m.found_via==='medium_rss')byDate[d].medium++;
-  });
-  // Add BD articles published per day
-  bdArticles.forEach(a=>{
-    if(!a.published)return;
-    const d=a.published.split('T')[0];
-    if(!byDate[d])byDate[d]={gnews:0,wp:0,reddit:0,medium:0,bdPub:0};
-    byDate[d].bdPub++;
-  });
+function calcDCF(tf) {
+  const subs=allSubs.filter(s=>s.status==='active'&&(tf==='all'||s.type===tf));
+  const r=dcf.dr/100;
+  return Math.round(subs.reduce((t,s)=>{
+    const ch=s.type==='corporate'?dcf.cc/100/12:s.interval==='year'?dcf.ac/100/12:dcf.mc/100;
+    const mp=s.interval==='year'?s.amount/12:s.amount;
+    return t+mp/(r/12+ch);
+  },0)*100)/100;
+}
 
-  // Build 30-day window (fill missing days)
-  const today=new Date().toISOString().split('T')[0];
-  const show=[];
-  for(let i=29;i>=0;i--){
-    const dt=new Date(Date.now()-i*86400000);
-    const d=dt.toISOString().split('T')[0];
-    show.push(d);
-    if(!byDate[d])byDate[d]={gnews:0,wp:0,reddit:0,medium:0,bdPub:0};
+function churnStats(tf) {
+  const types = tf==='all' ? ['monthly','annual','corporate','free','other'] : [tf];
+  const result={};
+  types.forEach(t=>{
+    const canceled=allSubs.filter(s=>s.status==='canceled'&&s.type===t&&s.tenure_days!=null);
+    const active  =allSubs.filter(s=>s.status==='active'  &&s.type===t);
+    const tenures =canceled.map(s=>s.tenure_days).filter(d=>d>0);
+    const avgTenure=tenures.length ? tenures.reduce((a,b)=>a+b,0)/tenures.length : null;
+    const medTenure=median(tenures);
+    const avgAmt   =canceled.length ? canceled.reduce((s,x)=>s+x.amount,0)/canceled.length : 0;
+    const mPay     =t==='annual'?avgAmt/12:avgAmt;
+    const observedLTV = medTenure&&mPay ? mPay*(medTenure/30.4) : null;
+    result[t]={
+      canceledCount:canceled.length,
+      activeCount:active.length,
+      avgTenureDays:avgTenure?Math.round(avgTenure):null,
+      avgTenureMonths:avgTenure?Math.round(avgTenure/30.4*10)/10:null,
+      medianTenureDays:medTenure?Math.round(medTenure):null,
+      medianTenureMonths:medTenure?Math.round(medTenure/30.4*10)/10:null,
+      observedLTV:observedLTV?Math.round(observedLTV*100)/100:null,
+      tenures,
+      canceled,
+    };
+  });
+  return result;
+}
+
+function median(arr) {
+  if(!arr.length) return null;
+  const s=[...arr].sort((a,b)=>a-b);
+  const m=Math.floor(s.length/2);
+  return s.length%2?s[m]:(s[m-1]+s[m])/2;
+}
+
+function avgSubAmt(type) {
+  const subs=allSubs.filter(s=>s.status==='active'&&s.type===type);
+  return subs.length?subs.reduce((s,x)=>s+x.amount,0)/subs.length:0;
+}
+
+// ════════════════════════════════════════════════
+// APPLY FILTERS
+// ════════════════════════════════════════════════
+function applyFilters() {
+  const{from,to}=getRange(period);
+  const payA=analyzePay(from,to,subType);
+  const subA=analyzeSubs(subType);
+  const dcfV=calcDCF(subType);
+  let cmpPay=null,cmpSub=null;
+  if(cmpEnabled){const{from:cf,to:ct}=getCmpRange(from,to);cmpPay=analyzePay(cf,ct,subType);cmpSub=analyzeSubs(subType);} // cmpSub is always live snapshot — sub counts can't be historically compared
+  renderOverview(payA,subA,dcfV,cmpPay,cmpSub,from,to);
+  payCache=allPayments.filter(p=>inR(p.date,from,to)&&(subType==='all'||p.type===subType));
+  renderPayTable(from,to);
+  // Re-render churn so canceled KPI respects period filter
+  renderChurn(from, to);
+  renderTrends(from, to);
+}
+
+// ════════════════════════════════════════════════
+// OVERVIEW
+// ════════════════════════════════════════════════
+function renderOverview(payA,subA,dcfV,cmpPay,cmpSub,from,to) {
+  const dcfPer=subA.total>0?Math.round(dcfV/subA.total):0;
+  const pl=`${ds(from)} → ${ds(to)}`;
+  const mLTV=()=>{const a=avgSubAmt('monthly'),c=dcf.mc/100;return a&&c?f$(a/c):'—';};
+  const aLTV=()=>{const a=avgSubAmt('annual')/12,c=dcf.ac/100/12;return a&&c?f$(a/c):'—';};
+
+  document.getElementById('overview-body').innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi" style="--kc:var(--c-annual)"><div class="kpi-lbl">Active Subscribers</div><div class="kpi-val ac">${fN(subA.total)}</div><div class="kpi-sub">live snapshot</div></div>
+      <div class="kpi" style="--kc:var(--c-monthly)"><div class="kpi-lbl">MRR</div><div class="kpi-val">${f$(subA.mrr)}</div><div class="kpi-sub">ARR ${f$(subA.arr)}</div></div>
+      <div class="kpi" style="--kc:var(--c-corporate)">
+        <div class="kpi-lbl">Revenue in Period</div><div class="kpi-val ac">${f$(payA.total)}</div>
+        <div class="kpi-sub">${pl}</div>${cmpPay?dlt(payA.total,cmpPay.total):''}
+      </div>
+      <div class="kpi" style="--kc:var(--c-event)">
+        <div class="kpi-lbl">Payments in Period</div><div class="kpi-val">${fN(payA.pays.length)}</div>
+        <div class="kpi-sub">${f$(payA.total/Math.max(payA.pays.length,1))} avg</div>${cmpPay?dlt(payA.pays.length,cmpPay.pays.length):''}
+      </div>
+      <div class="kpi" style="--kc:var(--c-other)">
+        <div class="kpi-lbl">DCF (Active Subs)</div><div class="kpi-val ac">${f$(dcfV)}</div>
+        <div class="kpi-sub">${f$(dcfPer)}/sub avg</div>
+      </div>
+      <div class="kpi" style="--kc:var(--c-event)">
+        <div class="kpi-lbl">Event Revenue</div><div class="kpi-val">${f$((payA.byType.event||{amount:0}).amount)}</div>
+        <div class="kpi-sub">${fN((payA.byType.event||{count:0}).count)} transactions</div>${cmpPay?dlt((payA.byType.event||{amount:0}).amount,(cmpPay.byType.event||{amount:0}).amount):''}
+      </div>
+    </div>
+    ${cmpEnabled&&cmpPay?renderCmp(payA,subA,cmpPay,cmpSub):''}
+    <div class="two-col">
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-hd"><div class="panel-title">Subscriber Mix — <span>By Type</span></div><div class="panel-meta">Snapshot</div></div>
+        <div class="panel-body">
+          <div class="donut-wrap"><canvas id="d-subs" width="110" height="110"></canvas><div class="donut-leg">${legend(subA.counts,subA.total,false)}</div></div>
+          <table class="tbl" style="margin-top:14px">
+            <tr><th>Type</th><th style="text-align:right">Count</th><th style="text-align:right">Est MRR</th></tr>
+            ${Object.entries(subA.counts).map(([k,v])=>v?`<tr>
+              <td><span class="type-badge"><span class="type-dot" style="background:${C[k]}"></span>${LBL[k]}</span></td>
+              <td style="text-align:right">${fN(v)}</td>
+              <td style="text-align:right">${f$(subA.total>0?subA.mrr*(v/subA.total):0)}</td>
+            </tr>`:'').join('')}
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-hd"><div class="panel-title">Revenue Mix — <span>${pl}</span></div></div>
+        <div class="panel-body">
+          <div class="donut-wrap"><canvas id="d-rev" width="110" height="110"></canvas><div class="donut-leg">${legend(Object.fromEntries(Object.entries(payA.byType).map(([k,v])=>[k,v.amount])),payA.total,true)}</div></div>
+          <table class="tbl" style="margin-top:14px">
+            <tr><th>Type</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th></tr>
+            ${Object.entries(payA.byType).map(([k,v])=>v.amount?`<tr>
+              <td><span class="type-badge"><span class="type-dot" style="background:${C[k]||'#888'}"></span>${LBL[k]||k}</span></td>
+              <td style="text-align:right">${fN(v.count)}</td>
+              <td style="text-align:right;color:var(--gold)">${f$(v.amount)}</td>
+            </tr>`:'').join('')}
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">Discounted Cash Flow — <span>Active Subscribers</span></div><div class="panel-meta">Edit assumptions below</div></div>
+      <div class="panel-body">
+        <div class="dcf-grid">
+          <div class="dcf-item"><div class="dcf-lbl">Total DCF Value</div><div class="dcf-val" id="dcf-t">${f$(dcfV)}</div><div class="dcf-sub">NPV of all active subs</div></div>
+          <div class="dcf-item"><div class="dcf-lbl">DCF per Sub</div><div class="dcf-val" id="dcf-p">${f$(dcfPer)}</div><div class="dcf-sub">${fN(subA.total)} active subs</div></div>
+          <div class="dcf-item"><div class="dcf-lbl">Assumed Monthly LTV</div><div class="dcf-val" id="dcf-lm">${mLTV()}</div><div class="dcf-sub">avg price ÷ monthly churn</div></div>
+          <div class="dcf-item"><div class="dcf-lbl">Assumed Annual LTV</div><div class="dcf-val" id="dcf-la">${aLTV()}</div><div class="dcf-sub">avg price ÷ annual churn</div></div>
+        </div>
+        <div class="assum-title">Assumptions</div>
+        <div class="assum-row"><span class="assum-lbl">Discount Rate (% annual)</span><input type="number" class="assum-in" id="a-dr" value="${dcf.dr}" step="0.5"></div>
+        <div class="assum-row"><span class="assum-lbl">Monthly Sub Churn (% / month)</span><input type="number" class="assum-in" id="a-mc" value="${dcf.mc}" step="0.1"></div>
+        <div class="assum-row"><span class="assum-lbl">Annual Sub Churn (% / year)</span><input type="number" class="assum-in" id="a-ac" value="${dcf.ac}" step="0.5"></div>
+        <div class="assum-row"><span class="assum-lbl">Corporate Sub Churn (% / year)</span><input type="number" class="assum-in" id="a-cc" value="${dcf.cc}" step="0.5"></div>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{
+    donut('d-subs',subA.counts);
+    donut('d-rev',Object.fromEntries(Object.entries(payA.byType).map(([k,v])=>[k,v.amount])));
+    bindDCF(subA);
+  },30);
+}
+
+function bindDCF(subA) {
+  ['a-dr','a-mc','a-ac','a-cc'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.addEventListener('input',()=>{
+      dcf.dr=parseFloat(document.getElementById('a-dr').value)||10;
+      dcf.mc=parseFloat(document.getElementById('a-mc').value)||3;
+      dcf.ac=parseFloat(document.getElementById('a-ac').value)||8;
+      dcf.cc=parseFloat(document.getElementById('a-cc').value)||5;
+      const v=calcDCF(subType), sa=analyzeSubs(subType);
+      const set=(i,x)=>{const e=document.getElementById(i);if(e)e.textContent=x;};
+      set('dcf-t',f$(v)); set('dcf-p',f$(sa.total>0?Math.round(v/sa.total):0));
+      const mL=()=>{const a=avgSubAmt('monthly'),c=dcf.mc/100;return a&&c?f$(a/c):'—';};
+      const aL=()=>{const a=avgSubAmt('annual')/12,c=dcf.ac/100/12;return a&&c?f$(a/c):'—';};
+      set('dcf-lm',mL()); set('dcf-la',aL());
+    });
+  });
+}
+
+function renderCmp(payA,subA,cmpPay,cmpSub) {
+  const rows=[
+    ['Active Subs (live)',  fN(subA.total),   fN(cmpSub.total)],
+    ['MRR (live)',          f$(subA.mrr),     f$(cmpSub.mrr)],
+    ['ARR (live)',          f$(subA.arr),     f$(cmpSub.arr)],
+    ['Revenue',      f$(payA.total),   f$(cmpPay.total)],
+    ['Payments',     fN(payA.pays.length), fN(cmpPay.pays.length)],
+    ['Event Rev',    f$((payA.byType.event||{amount:0}).amount), f$((cmpPay.byType.event||{amount:0}).amount)],
+  ];
+  return `<div class="cmp-split">
+    <div class="cmp-col"><div class="cmp-col-lbl">Period A</div>${rows.map(([l,a])=>`<div class="cmp-row"><span class="cmp-rlbl">${l}</span><span class="cmp-rval">${a}</span></div>`).join('')}</div>
+    <div class="cmp-col b"><div class="cmp-col-lbl">▶ Period B</div>${rows.map(([l,a,b])=>`<div class="cmp-row"><span class="cmp-rlbl">${l}</span><span class="cmp-rval hl">${b}</span></div>`).join('')}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// CHURN & RETENTION TAB
+// ════════════════════════════════════════════════
+let renewalChartFilter='all', newLapsedFilter='all';
+
+function renderChurn(from, to) {
+  // If no date range passed, use current period filter
+  if(!from) { const r=getRange(period); from=r.from; to=r.to; }
+
+  const stats=churnStats('all');
+  const types=['monthly','annual','corporate','free'];
+  const maxMedian=Math.max(...types.map(t=>stats[t]?.medianTenureDays||0),1);
+
+  // Canceled within the active period
+  const canceledInPeriod = allSubs.filter(s=>s.status==='canceled' && s.canceled_at && inR(new Date(s.canceled_at*1000),from,to));
+  const periodLabel = `${ds(from)} → ${ds(to)}`;
+
+  // Preserve lapsed filter/sort state across re-renders (period changes)
+  const prevLapsedFilter = window._lapsedFilter || 'all';
+  const prevLapsedSort   = window._lapsedSort   || {col:'canceled_at',dir:'desc'};
+
+  document.getElementById('churn-body').innerHTML=`
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi" style="--kc:var(--c-monthly)">
+        <div class="kpi-lbl">Canceled — Period</div>
+        <div class="kpi-val">${fN(canceledInPeriod.length)}</div>
+        <div class="kpi-sub">${periodLabel}</div>
+      </div>
+      <div class="kpi" style="--kc:var(--red)">
+        <div class="kpi-lbl">Canceled — All Time</div>
+        <div class="kpi-val">${fN(allSubs.filter(s=>s.status==='canceled').length)}</div>
+        <div class="kpi-sub">${fN(allSubs.filter(s=>s.status==='active').length)} currently active</div>
+      </div>
+      <div class="kpi" style="--kc:var(--c-annual)">
+        <div class="kpi-lbl">Median Tenure — Monthly</div>
+        <div class="kpi-val ac">${stats.monthly?.medianTenureMonths!=null?stats.monthly.medianTenureMonths+'mo':'—'}</div>
+        <div class="kpi-sub">${stats.monthly?.canceledCount||0} canceled · avg ${stats.monthly?.avgTenureMonths||'—'}mo</div>
+      </div>
+      <div class="kpi" style="--kc:var(--c-annual)">
+        <div class="kpi-lbl">Median Tenure — Annual</div>
+        <div class="kpi-val ac">${stats.annual?.medianTenureMonths!=null?stats.annual.medianTenureMonths+'mo':'—'}</div>
+        <div class="kpi-sub">${stats.annual?.canceledCount||0} canceled</div>
+      </div>
+      <div class="kpi" style="--kc:var(--c-corporate)">
+        <div class="kpi-lbl">Median Tenure — Corporate</div>
+        <div class="kpi-val ac">${stats.corporate?.medianTenureMonths!=null?stats.corporate.medianTenureMonths+'mo':'—'}</div>
+        <div class="kpi-sub">${stats.corporate?.canceledCount||0} canceled</div>
+      </div>
+    </div>
+
+    <!-- New vs Lapsed chart -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">New vs Lapsed — <span>Over Period</span></div>
+        <div class="chart-filters" id="newlapsed-filters">
+          <button class="cf-btn on" onclick="setNewLapsedFilter('all')">All</button>
+          <button class="cf-btn" onclick="setNewLapsedFilter('monthly')">Monthly</button>
+          <button class="cf-btn" onclick="setNewLapsedFilter('annual')">Annual</button>
+          <button class="cf-btn" onclick="setNewLapsedFilter('corporate')">Corporate</button>
+          <button class="cf-btn" onclick="setNewLapsedFilter('free')">Free</button>
+        </div>
+      </div>
+      <div class="trend-wrap" id="churn-newlapsed-chart"></div>
+    </div>
+
+    <!-- Net new paying subscribers -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Net New Paying Subscribers — <span>Net change within period, by type</span></div>
+        <div class="panel-meta">Monthly · Annual · Corporate</div>
+      </div>
+      <div class="trend-wrap" id="churn-netnew-chart"></div>
+    </div>
+
+    <!-- Churn by renewal event -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Churn by Renewal Event — <span>% lapsing at each renewal</span></div>
+        <div class="chart-filters" id="renewal-filters">
+          <button class="cf-btn on" onclick="setRenewalFilter('all')">All</button>
+          <button class="cf-btn" onclick="setRenewalFilter('monthly')">Monthly</button>
+          <button class="cf-btn" onclick="setRenewalFilter('annual')">Annual</button>
+          <button class="cf-btn" onclick="setRenewalFilter('corporate')">Corporate</button>
+          <button class="cf-btn" onclick="setRenewalFilter('free')">Free</button>
+        </div>
+      </div>
+      <div class="trend-wrap" id="churn-renewal-chart"></div>
+    </div>
+
+    <!-- Tenure bars + LTV -->
+    <div class="two-col">
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-hd"><div class="panel-title">Median Tenure — <span>Days to Cancellation</span></div></div>
+        <div class="panel-body">
+          ${types.map(t=>{
+            const st=stats[t]; if(!st||!st.medianTenureDays) return `<div class="tenure-bar-row"><div class="tenure-type" style="color:${C[t]}">${LBL[t]}</div><div class="tenure-track"></div><div class="tenure-val" style="color:var(--text-dim)">—</div><div class="tenure-sub">no data</div></div>`;
+            const pct=(st.medianTenureDays/maxMedian)*100;
+            return `<div class="tenure-bar-row">
+              <div class="tenure-type" style="color:${C[t]}">${LBL[t]}</div>
+              <div class="tenure-track"><div class="tenure-fill" style="width:${pct}%;background:${C[t]}"></div></div>
+              <div class="tenure-val">${st.medianTenureDays}d</div>
+              <div class="tenure-sub">${st.medianTenureMonths}mo · n=${st.canceledCount}</div>
+            </div>`;
+          }).join('')}
+          <p class="cohort-note">Avg tenure (for reference): ${types.map(t=>`${LBL[t]} ${stats[t]?.avgTenureDays!=null?stats[t].avgTenureDays+'d':'—'}`).join(' · ')}</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-hd"><div class="panel-title">LTV Comparison — <span>Observed vs Assumed</span></div><div class="panel-meta">Observed = median revenue before cancel</div></div>
+        <div class="panel-body">
+          <div style="display:flex;flex-direction:column;gap:12px">
+          ${types.map(t=>{
+            const st=stats[t];
+            const assumed=()=>{const a=avgSubAmt(t)/(t==='annual'?12:1),c=t==='annual'?dcf.ac/100/12:t==='corporate'?dcf.cc/100/12:dcf.mc/100;return a&&c?a/c:null;};
+            const assumedV=assumed();
+            return `<div class="ltv-card" style="--lc:${C[t]}">
+              <div class="ltv-type">${LBL[t]}</div>
+              ${t==='free'
+                ? `<div class="ltv-row"><span class="ltv-rlbl">Observed LTV</span><span class="ltv-rval muted">N/A — $0 plan</span></div>
+                   <div class="ltv-row"><span class="ltv-rlbl">Assumed LTV</span><span class="ltv-rval muted">N/A — $0 plan</span></div>`
+                : `<div class="ltv-row"><span class="ltv-rlbl">Observed LTV (median)</span><span class="ltv-rval">${st?.observedLTV!=null?f$(st.observedLTV):'—'}</span></div>
+                   <div class="ltv-row"><span class="ltv-rlbl">Assumed LTV (DCF)</span><span class="ltv-rval muted">${assumedV!=null?f$(assumedV):'—'}</span></div>`
+              }
+              <div class="ltv-row"><span class="ltv-rlbl">Median Tenure</span><span class="ltv-rval muted">${st?.medianTenureMonths!=null?st.medianTenureMonths+'mo':'—'}</span></div>
+            </div>`;
+          }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lapsed subscriber table -->
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Lapsed Subscribers — <span>All Canceled</span></div>
+        <div class="panel-meta">${fN(allSubs.filter(s=>s.status==='canceled').length)} records</div>
+      </div>
+      <div class="tbl-controls">
+        <span class="ctrl-label">Type</span>
+        <div class="segs" id="lapsed-type-btns">
+          <button class="seg on" data-lf="all"       onclick="setLapsedFilter('all')">All</button>
+          <button class="seg"    data-lf="monthly"   onclick="setLapsedFilter('monthly')">Monthly</button>
+          <button class="seg"    data-lf="annual"    onclick="setLapsedFilter('annual')">Annual</button>
+          <button class="seg"    data-lf="corporate" onclick="setLapsedFilter('corporate')">Corporate</button>
+          <button class="seg"    data-lf="free"      onclick="setLapsedFilter('free')">Free</button>
+          <button class="seg"    data-lf="other"     onclick="setLapsedFilter('other')">Other</button>
+        </div>
+        <span style="margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim)" id="lapsed-count"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th onclick="sortLapsed('type')">Type</th>
+            <th onclick="sortLapsed('plan_name')">Plan</th>
+            <th onclick="sortLapsed('amount')">Amount</th>
+            <th onclick="sortLapsed('started_at')">Started</th>
+            <th onclick="sortLapsed('canceled_at')">Canceled</th>
+            <th onclick="sortLapsed('tenure_days')">Tenure</th>
+            <th onclick="sortLapsed('customer_id')">Customer ID</th>
+          </tr></thead>
+          <tbody id="lapsed-tbody"></tbody>
+        </table>
+      </div>
+    </div>`;
+
+  window._lapsedFilter = prevLapsedFilter;
+  window._lapsedSort   = prevLapsedSort;
+  window._churnFrom = from;
+  window._churnTo   = to;
+  // Restore button active state for lapsed filter
+  document.querySelectorAll('#lapsed-type-btns .seg').forEach(b=>b.classList.toggle('on',b.dataset.lf===prevLapsedFilter));
+  renderLapsedTable();
+  renderNewLapsedChart();
+  renderRenewalChart();
+  renderNetNewChart();
+}
+
+// ── New vs Lapsed chart ───────────────────────────────────────────────────────
+window.setNewLapsedFilter = function(f) {
+  newLapsedFilter = f;
+  document.querySelectorAll('#newlapsed-filters .cf-btn').forEach((b,i)=>{
+    b.classList.toggle('on', ['all','monthly','annual','corporate','free'][i]===f);
+  });
+  renderNewLapsedChart();
+};
+
+function renderNewLapsedChart() {
+  const el = document.getElementById('churn-newlapsed-chart');
+  if(!el) return;
+  const from = window._churnFrom, to = window._churnTo;
+  if(!from||!to) return;
+
+  // Build monthly buckets between from and to
+  const buckets={};
+  const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+  const end = new Date(to.getFullYear(), to.getMonth(), 1);
+  while(cur <= end) {
+    buckets[dsYM(cur)] = {new:{monthly:0,annual:0,corporate:0,free:0}, lapsed:{monthly:0,annual:0,corporate:0,free:0}};
+    cur.setMonth(cur.getMonth()+1);
   }
 
-  // Calculate max for scaling (mentions + bd articles)
-  const maxMentions=Math.max(...show.map(d=>{const v=byDate[d];return v.gnews+v.wp+v.reddit+v.medium;}),1);
-  const maxBd=Math.max(...show.map(d=>byDate[d].bdPub),1);
-  const maxTotal=Math.max(maxMentions,maxBd,1);
-  const barH=150;
+  const types = ['monthly','annual','corporate','free'];
+  const tf = newLapsedFilter;
 
-  // Render bars
-  document.getElementById('chartBars').innerHTML=show.map(d=>{
-    const v=byDate[d];
-    const mentionTotal=v.gnews+v.wp+v.reddit+v.medium;
-    const gH=Math.max(0,(v.gnews/maxTotal)*barH);
-    const wH=Math.max(0,(v.wp/maxTotal)*barH);
-    const rH=Math.max(0,(v.reddit/maxTotal)*barH);
-    const mH=Math.max(0,(v.medium/maxTotal)*barH);
-    const bH=Math.max(0,(v.bdPub/maxTotal)*barH);
-    const tip=fmtShort(d)+': '+mentionTotal+' mention'+(mentionTotal!==1?'s':'')+', '+v.bdPub+' BD article'+(v.bdPub!==1?'s':'');
-    return '<div class="chart-col"><div class="chart-tooltip">'+tip+'</div>'+
-      '<div style="display:flex;gap:1px;align-items:flex-end;width:100%;height:100%">'+
-        '<div style="flex:1;display:flex;flex-direction:column;align-items:stretch">'+
-          (mH?'<div class="bar medium" style="height:'+mH+'px"></div>':'')+
-          (rH?'<div class="bar reddit" style="height:'+rH+'px"></div>':'')+
-          (wH?'<div class="bar wp" style="height:'+wH+'px"></div>':'')+
-          '<div class="bar gnews" style="height:'+Math.max(mentionTotal?1:0,gH)+'px"></div>'+
-        '</div>'+
-        (bH?'<div class="bar bd-pub" style="flex:0 0 40%;height:'+bH+'px"></div>':'')+
-      '</div></div>';
-  }).join('');
+  allSubs.forEach(s => {
+    const t = s.type;
+    if(tf !== 'all' && t !== tf) return;
+    if(!types.includes(t)) return;
+    // New
+    if(s.started_at) {
+      const m = dsYM(new Date(s.started_at*1000));
+      if(buckets[m]) buckets[m].new[t] = (buckets[m].new[t]||0)+1;
+    }
+    // Lapsed
+    if(s.status==='canceled' && s.canceled_at) {
+      const m = dsYM(new Date(s.canceled_at*1000));
+      if(buckets[m]) buckets[m].lapsed[t] = (buckets[m].lapsed[t]||0)+1;
+    }
+  });
 
-  // Render labels
-  document.getElementById('chartLabels').innerHTML=show.map((d,i)=>{
-    if(i%3&&show.length>14)return'<span></span>';
-    return'<span>'+fmtShort(d)+'</span>';
-  }).join('');
+  const months = Object.keys(buckets).sort();
+  if(!months.length) { el.innerHTML='<div class="empty" style="padding:24px">No data in selected period.</div>'; return; }
 
-  // Render 30-day trailing average line
-  // Calculate trailing avg for each day in the window
-  const allDates=Object.keys(byDate).sort();
-  const avgPoints=show.map((d,i)=>{
-    // Average of mentions over trailing 30 days from this date
-    let sum=0,count=0;
-    for(let j=0;j<30;j++){
-      const lookback=new Date(new Date(d+'T12:00:00').getTime()-j*86400000).toISOString().split('T')[0];
-      if(byDate[lookback]){
-        const v=byDate[lookback];
-        sum+=v.gnews+v.wp+v.reddit+v.medium;
+  const activeTypes = tf==='all' ? types : [tf];
+  const W=800, H=180, PL=40, PR=10, PT=10, PB=30, IW=W-PL-PR, IH=H-PT-PB;
+
+  // Max for scaling
+  let maxNew=0, maxLapsed=0;
+  months.forEach(m => {
+    const nSum = activeTypes.reduce((s,t)=>s+(buckets[m].new[t]||0),0);
+    const lSum = activeTypes.reduce((s,t)=>s+(buckets[m].lapsed[t]||0),0);
+    if(nSum>maxNew) maxNew=nSum;
+    if(lSum>maxLapsed) maxLapsed=lSum;
+  });
+  const maxVal = Math.max(maxNew, maxLapsed, 1);
+
+  const rawBw = IW / months.length;
+  const bw = Math.min(rawBw, 80);             // cap slot width so few-month views look normal
+  const totalBarsW = bw * months.length;
+  const xOff = PL + (IW - totalBarsW) / 2;    // center the bar group in the chart area
+  const pairGap = Math.max(1, bw * 0.08);
+  const slotPad = Math.max(1, bw * 0.12);
+  const barW = (bw - slotPad*2 - pairGap) / 2;
+  const xNew    = i => xOff + i*bw + slotPad;
+  const xLapsed = i => xOff + i*bw + slotPad + barW + pairGap;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Grid lines
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    const y=PT+IH-t*IH;
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    if(t>0) svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${Math.round(t*maxVal)}</text>`;
+  });
+
+  // Draw New bars (stacked, solid) then Lapsed bars (stacked, faded)
+  months.forEach((m,i) => {
+    // New — stacked upward from baseline
+    let yTop = PT+IH;
+    activeTypes.forEach(t=>{
+      const v = buckets[m].new[t]||0;
+      if(!v) return;
+      const bh = (v/maxVal)*IH;
+      yTop -= bh;
+      svg+=`<rect x="${xNew(i)}" y="${yTop}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.85"/>`;
+    });
+    // Lapsed — stacked upward from baseline, faded
+    yTop = PT+IH;
+    activeTypes.forEach(t=>{
+      const v = buckets[m].lapsed[t]||0;
+      if(!v) return;
+      const bh = (v/maxVal)*IH;
+      yTop -= bh;
+      svg+=`<rect x="${xLapsed(i)}" y="${yTop}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.4"/>`;
+    });
+  });
+
+  // X labels — centered on the pair, show every Nth month
+  const step = Math.max(1, Math.floor(months.length/8));
+  months.forEach((m,i)=>{
+    if(i%step===0) {
+      const cx = xOff + i*bw + bw/2;
+      svg+=`<text x="${cx}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
+    }
+  });
+
+  svg+=`</svg>`;
+
+  // Legend
+  const legItems = activeTypes.map(t=>`<div class="trend-leg-item"><div style="width:10px;height:10px;background:${C[t]};opacity:0.85;flex-shrink:0"></div>${LBL[t]}</div>`).join('');
+  el.innerHTML = svg + `<div class="trend-leg" style="margin-top:6px">
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:#888;opacity:0.8;flex-shrink:0"></div><strong style="color:var(--text)">New</strong> (solid)</div>
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:#888;opacity:0.4;flex-shrink:0"></div><strong style="color:var(--text)">Lapsed</strong> (faded)</div>
+    ${legItems}
+  </div>`;
+}
+
+// ── Churn by renewal event ────────────────────────────────────────────────────
+window.setRenewalFilter = function(f) {
+  renewalChartFilter = f;
+  document.querySelectorAll('#renewal-filters .cf-btn').forEach((b,i)=>{
+    b.classList.toggle('on', ['all','monthly','annual','corporate','free'][i]===f);
+  });
+  renderRenewalChart();
+};
+
+function getRenewalPeriodDays(type) {
+  return type==='annual'||type==='corporate' ? 365 : 30;
+}
+
+function renderRenewalChart() {
+  const el = document.getElementById('churn-renewal-chart');
+  if(!el) return;
+  const tf = renewalChartFilter;
+  const types = tf==='all' ? ['monthly','annual','corporate','free'] : [tf];
+
+  // For each type, compute how many churned at renewal N
+  // Renewal N = floor(tenure_days / period_days)
+  const maxRenewals = 12;
+  const typeData = {};
+
+  types.forEach(t => {
+    const periodDays = getRenewalPeriodDays(t);
+    // All subs of this type (canceled only, with tenure)
+    const canceled = allSubs.filter(s=>s.status==='canceled'&&s.type===t&&s.tenure_days!=null&&s.tenure_days>0);
+    // Total ever subscribed (active + canceled)
+    const totalEver = allSubs.filter(s=>s.type===t).length;
+
+    // Count how many churned at each renewal bucket
+    const churnAtRenewal = new Array(maxRenewals+1).fill(0);
+    const survivedTo = new Array(maxRenewals+1).fill(0);
+
+    // survivedTo[n] = number who made it to renewal n
+    // For renewal 0 (first period): everyone who ever subscribed
+    // For renewal n: everyone whose tenure >= n*periodDays
+    // churnAtRenewal[n] = those who churned between renewal n and n+1
+
+    canceled.forEach(s => {
+      const renewal = Math.floor(s.tenure_days / periodDays);
+      if(renewal <= maxRenewals) churnAtRenewal[renewal]++;
+    });
+
+    const nowTs = Date.now() / 1000;
+    for(let n=0; n<=maxRenewals; n++) {
+      // Count all subs who reached renewal n:
+      // - canceled subs with tenure_days >= n*periodDays
+      // - active subs whose age (now - started_at) >= n*periodDays
+      survivedTo[n] = allSubs.filter(s => {
+        if(s.type !== t) return false;
+        const ageDays = s.status==='canceled'
+          ? (s.tenure_days != null ? s.tenure_days : 0)
+          : (s.started_at ? (nowTs - s.started_at) / 86400 : 0);
+        return ageDays >= n * periodDays;
+      }).length;
+    }
+
+    typeData[t] = {churnAtRenewal, survivedTo, periodDays};
+  });
+
+  // Determine how many renewal slots to show (cut off where data gets sparse)
+  const W=800, H=240, PL=54, PR=10, PT=24, PB=36, IW=W-PL-PR, IH=H-PT-PB;
+  const slots = maxRenewals;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Y-axis label — "Renewal Events" rotated
+  svg+=`<text transform="rotate(-90)" x="${-(PT+IH/2)}" y="13" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono" letter-spacing="0.08em">CHURN %</text>`;
+
+  // Grid
+  [0,25,50,75,100].forEach(pct=>{
+    const y=PT+IH-(pct/100)*IH;
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${pct}%</text>`;
+  });
+
+  const groupW = IW / (slots+1);
+
+  for(let n=0; n<=slots; n++) {
+    const gx = PL + n*groupW;
+    types.forEach((t,ti) => {
+      const d = typeData[t];
+      if(!d) return;
+      const survived = d.survivedTo[n];
+      if(!survived) return;
+      const churned = d.churnAtRenewal[n];
+      const pct = churned/survived*100;
+      if(!pct) return;
+      const bh = (pct/100)*IH;
+      const bWidth = (groupW/types.length)*0.72;
+      const bx = gx + ti*(groupW/types.length) + (groupW/types.length-bWidth)/2;
+      const by = PT+IH-bh;
+      svg+=`<rect x="${bx}" y="${by}" width="${bWidth}" height="${bh}" fill="${C[t]}" opacity="0.85" rx="1"/>`;
+      if(pct > 5) svg+=`<text x="${bx+bWidth/2}" y="${by-3}" fill="${C[t]}" font-size="8" text-anchor="middle" font-family="JetBrains Mono">${Math.round(pct)}%</text>`;
+    });
+    // X label — just the number
+    svg+=`<text x="${gx+groupW/2}" y="${H-6}" fill="#706878" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="500">${n+1}</text>`;
+  }
+
+  // X-axis title
+  svg+=`<text x="${PL+IW/2}" y="${H}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono" letter-spacing="0.08em">RENEWAL EVENT</text>`;
+
+  svg+=`</svg>`;
+  const legItems = types.map(t=>`<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C[t]};height:10px;border-radius:1px"></div>${LBL[t]}</div>`).join('');
+  el.innerHTML = svg + `<div class="trend-leg">${legItems}</div>
+    <p class="cohort-note" style="padding:8px 0 0">Shows % of subscribers reaching each renewal who then lapse. Renewal 1 = end of first billing period.</p>`;
+}
+
+// ── Net New Paying Subscribers — stacked bar chart ───────────────────────────
+function renderNetNewChart() {
+  const el = document.getElementById('churn-netnew-chart');
+  if(!el) return;
+  const from = window._churnFrom, to = window._churnTo;
+  if(!from || !to) return;
+
+  const payTypes = ['corporate','annual','monthly']; // stack order: corp bottom, annual mid, monthly top
+
+  // Build the same monthly bucket set as the New vs Lapsed chart above
+  const buckets = {};
+  const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+  const endM = new Date(to.getFullYear(), to.getMonth(), 1);
+  while(cur <= endM) {
+    const key = dsYM(cur);
+    buckets[key] = {};
+    payTypes.forEach(t => { buckets[key][t] = 0; });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  const months = Object.keys(buckets).sort();
+  if(!months.length) { el.innerHTML='<div class="empty" style="padding:24px">No data in selected period.</div>'; return; }
+
+  const monthIndex = {};
+  months.forEach((m, i) => { monthIndex[m] = i; });
+
+  // Tally net new per type per month within the window
+  const netByType = {};
+  payTypes.forEach(t => { netByType[t] = new Array(months.length).fill(0); });
+
+  allSubs.forEach(s => {
+    if(!payTypes.includes(s.type)) return;
+    const t = s.type;
+    if(s.started_at) {
+      const m = dsYM(new Date(s.started_at * 1000));
+      if(monthIndex[m] !== undefined) netByType[t][monthIndex[m]]++;
+    }
+    if(s.status === 'canceled' && s.canceled_at) {
+      const m = dsYM(new Date(s.canceled_at * 1000));
+      if(monthIndex[m] !== undefined) netByType[t][monthIndex[m]]--;
+    }
+  });
+
+  // Per-month totals for stacking — separate positive and negative segments
+  // Positive segments stack upward from zero, negative stack downward
+  let maxPos = 0, maxNeg = 0;
+  months.forEach((_, i) => {
+    let pos = 0, neg = 0;
+    payTypes.forEach(t => {
+      const v = netByType[t][i];
+      if(v >= 0) pos += v; else neg += v;
+    });
+    if(pos > maxPos) maxPos = pos;
+    if(neg < maxNeg) maxNeg = neg;
+  });
+  const maxVal = Math.max(maxPos, 1);
+  const minVal = Math.min(maxNeg, 0);
+  const range = maxVal - minVal;
+
+  // Chart geometry — match New vs Lapsed chart
+  const W=800, H=200, PL=40, PR=10, PT=12, PB=30, IW=W-PL-PR, IH=H-PT-PB;
+  const rawBw = IW / months.length;
+  const bw = Math.min(rawBw, 80);
+  const totalBarsW = bw * months.length;
+  const xOff = PL + (IW - totalBarsW) / 2;
+  const slotPad = Math.max(1, bw * 0.15);
+  const barW = bw - slotPad * 2;
+  const yS = v => PT + IH - ((v - minVal) / range) * IH;
+  const y0 = yS(0);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Grid lines
+  const nGrid = 5;
+  for(let g = 0; g <= nGrid; g++) {
+    const v = minVal + (g / nGrid) * range;
+    const y = yS(v);
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    const lbl = Math.round(v) >= 0 ? '+'+Math.round(v) : String(Math.round(v));
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${lbl}</text>`;
+  }
+
+  // Zero baseline (always visible)
+  svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>`;
+
+  // Stacked bars per month
+  months.forEach((m, i) => {
+    const x = xOff + i * bw + slotPad;
+    let posY = y0;   // positive bars grow upward from zero line
+    let negY = y0;   // negative bars grow downward from zero line
+
+    payTypes.forEach(t => {
+      const v = netByType[t][i];
+      if(v === 0) return;
+      const bh = Math.abs((v / range) * IH);
+      if(v > 0) {
+        posY -= bh;
+        svg+=`<rect x="${x}" y="${posY}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.85"/>`;
+      } else {
+        svg+=`<rect x="${x}" y="${negY}" width="${barW}" height="${bh}" fill="${C[t]}" opacity="0.5"/>`;
+        negY += bh;
       }
-      count++;
-    }
-    return sum/count;
-  });
-  const maxAvg=Math.max(...avgPoints,0.1);
-
-  // Draw SVG polyline over the chart
-  requestAnimationFrame(()=>{
-    const svg=document.getElementById('chartLine');
-    const container=document.getElementById('chartBars');
-    if(!container)return;
-    const W=container.offsetWidth;
-    const H=container.offsetHeight;
-    svg.setAttribute('viewBox','0 0 '+W+' '+H);
-
-    const colW=W/show.length;
-    const points=avgPoints.map((avg,i)=>{
-      const x=colW*i+colW/2;
-      const y=H-((avg/maxTotal)*barH);
-      return x+','+y;
     });
 
-    svg.innerHTML='<polyline points="'+points.join(' ')+'"/>';
-  });
-}
-
-// ═══ OUTLET PICKUP CHART (#2) ═══
-function renderOutletChart(){
-  // Detect BD reporters from articles
-  const bdReporters=new Set();
-  bdArticles.forEach(a=>{if(a.author)bdReporters.add(a.author.toLowerCase());});
-  // Also add core reporters
-  ['thomas gounley','justin wingerter','matt geiger','aaron kremer','max scheinblum'].forEach(r=>bdReporters.add(r));
-
-  // Apply date filters if set
-  const from=document.getElementById('fDateFrom').value;
-  const to=document.getElementById('fDateTo').value;
-  let filtered=mentions;
-  if(from||to){
-    filtered=mentions.filter(m=>{
-      const p=(m.published||'').split('T')[0];
-      if(from&&p&&p<from)return false;
-      if(to&&p&&p>to)return false;
-      return true;
-    });
-    const scope=[];
-    if(from)scope.push(fmtDate(from));
-    if(to)scope.push(fmtDate(to));
-    document.getElementById('outletChartScope').textContent=scope.join(' – ');
-  } else {
-    document.getElementById('outletChartScope').textContent='all time';
-  }
-
-  // Classify each mention as syndication or reference
-  const outlets={};
-  filtered.forEach(m=>{
-    const src=m.source||'Unknown';
-    if(!outlets[src])outlets[src]={syndication:0,reference:0};
-    const author=(m.author||'').toLowerCase().trim();
-    if(author&&[...bdReporters].some(r=>author.includes(r)||r.includes(author))){
-      outlets[src].syndication++;
-    } else {
-      outlets[src].reference++;
+    // Net total label above/below the bar
+    const net = payTypes.reduce((s, t) => s + netByType[t][i], 0);
+    if(net !== 0) {
+      const lbl = net > 0 ? '+'+net : String(net);
+      const ly = net > 0 ? posY - 4 : negY + 10;
+      svg+=`<text x="${x + barW/2}" y="${ly}" fill="${net>0?'#5cbfb0':'#e06060'}" font-size="8" text-anchor="middle" font-family="JetBrains Mono" font-weight="500">${lbl}</text>`;
     }
   });
 
-  // Sort by total descending
-  const sorted=Object.entries(outlets).sort((a,b)=>(b[1].syndication+b[1].reference)-(a[1].syndication+a[1].reference));
-  if(!sorted.length){document.getElementById('outletChartBars').innerHTML='';return;}
-
-  const maxVal=Math.max(...sorted.map(([,v])=>v.syndication+v.reference),1);
-  const barH=130;
-
-  document.getElementById('outletChartBars').innerHTML=sorted.map(([src,v])=>{
-    const total=v.syndication+v.reference;
-    const sH=Math.max(0,(v.syndication/maxVal)*barH);
-    const rH=Math.max(0,(v.reference/maxVal)*barH);
-    const tip=esc(src)+': '+v.syndication+' syndication, '+v.reference+' reference';
-    return '<div style="flex:1;min-width:28px;max-width:60px;display:flex;flex-direction:column;align-items:center;position:relative;cursor:pointer" class="chart-col">'+
-      '<div class="chart-tooltip">'+tip+'</div>'+
-      (sH?'<div style="width:100%;height:'+sH+'px;background:#3b82f6;border-radius:2px 2px 0 0"></div>':'')+
-      '<div style="width:100%;height:'+Math.max(total?1:0,rH)+'px;background:#f5a623;border-radius:'+(sH?'0':'2px 2px')+' 0 0"></div>'+
-    '</div>';
-  }).join('');
-
-  document.getElementById('outletChartLabels').innerHTML=sorted.map(([src])=>{
-    const short=src.length>12?src.slice(0,11)+'…':src;
-    return '<span style="flex:1;min-width:28px;max-width:60px;font-size:.55rem;color:#555;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+esc(short)+'</span>';
-  }).join('');
-}
-
-// ═══ SIDEBAR (#7) ═══
-function renderSidebar(){
-  const sc={},mc={};
-  mentions.forEach(m=>{sc[m.source]=(sc[m.source]||0)+1;const vl={google_news_rss:'Google News',wordpress_api:'WordPress',reddit_rss:'Reddit',medium_rss:'Medium'};mc[vl[m.found_via]||m.found_via]=(mc[vl[m.found_via]||m.found_via]||0)+1;});
-  document.getElementById('sourceList').innerHTML=Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([s,c])=>'<li data-source="'+esc(s)+'"'+(sidebarSource===s?' class="active"':'')+'><span>'+esc(s)+'</span><span class="s-count">'+c+'</span></li>').join('');
-  document.getElementById('methodList').innerHTML=Object.entries(mc).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<li><span>'+s+'</span><span class="s-count">'+c+'</span></li>').join('');
-  document.querySelectorAll('#sourceList li').forEach(li=>{li.addEventListener('click',()=>{
-    const s=li.dataset.source;sidebarSource=(sidebarSource===s)?'':s;
-    document.querySelectorAll('#sourceList li').forEach(x=>x.classList.remove('active'));
-    if(sidebarSource)li.classList.add('active');renderTable();});});
-}
-
-// ═══ FILTERS + TABLE ═══
-function getFiltered(){
-  const q=document.getElementById('fSearch').value.toLowerCase();
-  const via=document.getElementById('fVia').value;
-  const sent=document.getElementById('fSentiment').value;
-  const from=document.getElementById('fDateFrom').value;
-  const to=document.getElementById('fDateTo').value;
-  const today=new Date().toISOString().split('T')[0];
-  return mentions.filter(m=>{
-    if(kpiFilter==='today'){const mt=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Denver'}));const mid=new Date(mt.getFullYear(),mt.getMonth(),mt.getDate()).toISOString();if((m.first_seen||'')<mid)return false;}
-    if(kpiFilter==='sources7d'){const c7=new Date(Date.now()-7*86400000).toISOString();if((m.published||'')<c7)return false;}
-    if(sidebarSource&&m.source!==sidebarSource)return false;
-    if(via&&m.found_via!==via)return false;
-    if(sent&&m.sentiment!==sent)return false;
-    if(q&&!(m.title+' '+m.snippet+' '+m.source+' '+m.source_domain).toLowerCase().includes(q))return false;
-    if(from){const p=(m.published||'').split('T')[0];if(p&&p<from)return false;}
-    if(to){const p=(m.published||'').split('T')[0];if(p&&p>to)return false;}
-    return true;
-  });
-}
-function sortArr(arr){const dir=sortDir==='asc'?1:-1;return[...arr].sort((a,b)=>{let va=a[sortCol]||'',vb=b[sortCol]||'';if(sortCol==='published')return((new Date(va)||0)-(new Date(vb)||0))*dir;return String(va).localeCompare(String(vb))*dir;});}
-function renderTable(){
-  const filtered=sortArr(getFiltered());
-  document.getElementById('resultCount').textContent=filtered.length+' of '+mentions.length;
-  const tbody=document.getElementById('tableBody');
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" class="empty-state"><p>No mentions match</p></td></tr>';return;}
-  const vm={google_news_rss:'gnews',wordpress_api:'wp',reddit_rss:'reddit',medium_rss:'medium'};
-  const vl={google_news_rss:'Google News',wordpress_api:'WordPress',reddit_rss:'Reddit',medium_rss:'Medium'};
-  tbody.innerHTML=filtered.slice(0,200).map(m=>{
-    const bc=vm[m.found_via]||'gnews';const s=m.sentiment||'neutral';
-    return'<tr data-id="'+m.id+'"><td data-label="Date" class="mono">'+fmtDate(m.published)+'</td><td data-label="Source">'+esc(m.source)+'</td><td data-label="Title" class="title-cell">'+esc(m.title)+'</td><td data-label="Context" class="snippet-cell">'+hlBD(trunc(m.snippet,100))+'</td><td data-label="Sentiment"><span class="badge badge-'+s+'">'+s+'</span></td><td data-label="Via"><span class="badge badge-'+bc+'">'+(vl[m.found_via]||m.found_via)+'</span></td></tr>';
-  }).join('');
-  document.querySelectorAll('thead th').forEach(th=>{th.classList.toggle('sorted',th.dataset.col===sortCol);const a=th.querySelector('.sort-arrow');if(th.dataset.col===sortCol)a.textContent=sortDir==='asc'?'▲':'▼';else a.textContent='▼';});
-}
-['fSearch','fVia','fSentiment','fDateFrom','fDateTo'].forEach(id=>{document.getElementById(id).addEventListener(id.startsWith('fDate')?'change':'input',()=>{renderTable();if(id.startsWith('fDate'))renderOutletChart();});});
-document.querySelectorAll('thead th[data-col]').forEach(th=>{th.addEventListener('click',()=>{const c=th.dataset.col;if(sortCol===c)sortDir=sortDir==='asc'?'desc':'asc';else{sortCol=c;sortDir=c==='published'?'desc':'asc';}renderTable();});});
-
-// ═══ OUR STORIES (#4) ═══
-function getArticleMatches(artUrl){
-  // Use Claude matches if available
-  const matchedIds=(D.article_matches||{})[artUrl]||[];
-  const lookup={};mentions.forEach(m=>{lookup[m.id]=m;});
-  let results=matchedIds.map(id=>lookup[id]).filter(Boolean);
-  // Fallback: keyword matching if no Claude matches
-  if(!results.length){
-    const art=bdArticles.find(a=>a.url===artUrl);
-    if(art){
-      const words=art.title.toLowerCase().replace(/[^\w\s]/g,'').split(/\s+/).filter(w=>w.length>3);
-      const phrases=[];
-      if(words.length>=4)phrases.push(words.slice(0,4).join(' '));
-      if(words.length>=3)phrases.push(words.slice(0,3).join(' '));
-      results=mentions.filter(m=>{
-        const mt=(m.title+' '+m.snippet).toLowerCase();
-        if(artUrl.toLowerCase().replace(/\/$/,'')===(m.url||'').toLowerCase().replace(/\/$/,''))return false;
-        return phrases.some(p=>p.length>12&&mt.includes(p));
-      });
+  // X labels
+  const step = Math.max(1, Math.floor(months.length/8));
+  months.forEach((m, i) => {
+    if(i % step === 0) {
+      const cx = xOff + i * bw + bw/2;
+      svg+=`<text x="${cx}" y="${H-4}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${m.slice(2)}</text>`;
     }
-  }
-  return results;
-}
-function renderStories(){
-  const el=document.getElementById('storiesList');
-  if(!bdArticles.length){el.innerHTML='<div class="empty-state"><p>No BusinessDen articles tracked yet.</p></div>';return;}
-  const authors=new Set(bdArticles.map(a=>a.author).filter(Boolean));
-  const sel=document.getElementById('sfAuthor');
-  sel.innerHTML='<option value="">All reporters</option>';
-  [...authors].sort().forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
-  renderStoriesChart();
-  doRenderStories();
-}
-
-function renderStoriesChart(){
-  // Topic color map
-  const topicColors={
-    'Commercial Real Estate':'#3b82f6',
-    'Restaurants':'#f5a623',
-    'Brewing':'#f5a623',
-    'Retail':'#a78bfa',
-    'Startups':'#22c55e',
-    'Government':'#e85454',
-    'Residential Real Estate':'#06b6d4',
-    'Legal':'#fb923c',
-  };
-  const defaultColor='#555';
-
-  // Build 30-day window
-  const days=[];
-  for(let i=29;i>=0;i--){
-    days.push(new Date(Date.now()-i*86400000).toISOString().split('T')[0]);
-  }
-
-  // Collect all categories and count per day
-  const allCats=new Set();
-  const byDate={};
-  days.forEach(d=>{byDate[d]={};});
-  bdArticles.forEach(a=>{
-    if(!a.published)return;
-    const d=a.published.split('T')[0];
-    if(!byDate[d])return;
-    const cat=(a.categories&&a.categories[0])||'Other';
-    allCats.add(cat);
-    byDate[d][cat]=(byDate[d][cat]||0)+1;
   });
 
-  // Sort categories by total count
-  const catTotals={};
-  allCats.forEach(c=>{catTotals[c]=0;});
-  days.forEach(d=>{Object.entries(byDate[d]).forEach(([c,n])=>{catTotals[c]=(catTotals[c]||0)+n;});});
-  const sortedCats=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  svg+=`</svg>`;
 
-  // Max per day
-  const maxDay=Math.max(...days.map(d=>{let s=0;sortedCats.forEach(c=>{s+=(byDate[d][c]||0);});return s;}),1);
-  const barH=110;
-
-  // Render bars
-  document.getElementById('storiesChartBars').innerHTML=days.map(d=>{
-    let total=0;sortedCats.forEach(c=>{total+=(byDate[d][c]||0);});
-    const tip=fmtShort(d)+': '+total+' article'+(total!==1?'s':'');
-    let barsHtml='';
-    // Stack from bottom: most common category first
-    sortedCats.forEach(c=>{
-      const n=byDate[d][c]||0;
-      if(!n)return;
-      const h=Math.max(2,(n/maxDay)*barH);
-      const color=topicColors[c]||defaultColor;
-      barsHtml+='<div style="width:100%;height:'+h+'px;background:'+color+';border-radius:2px 2px 0 0;min-width:3px"></div>';
-    });
-    return'<div class="chart-col"><div class="chart-tooltip">'+tip+'</div>'+barsHtml+'</div>';
-  }).join('');
-
-  // Labels
-  document.getElementById('storiesChartLabels').innerHTML=days.map((d,i)=>{
-    if(i%3&&days.length>14)return'<span></span>';
-    return'<span>'+fmtShort(d)+'</span>';
-  }).join('');
-
-  // Legend — only show categories that appear
-  document.getElementById('storiesChartLegend').innerHTML=sortedCats.filter(c=>catTotals[c]>0).map(c=>{
-    const color=topicColors[c]||defaultColor;
-    return'<span><i style="background:'+color+'"></i> '+esc(c)+' ('+catTotals[c]+')</span>';
-  }).join('');
+  const legItems = [...payTypes].reverse().map(t =>
+    `<div class="trend-leg-item"><div style="width:10px;height:10px;background:${C[t]};opacity:0.85;flex-shrink:0"></div>${LBL[t]}</div>`
+  ).join('');
+  el.innerHTML = svg + `<div class="trend-leg" style="margin-top:6px">${legItems}</div>`;
 }
-function doRenderStories(){
-  const q=document.getElementById('sfSearch').value.toLowerCase();
-  const auth=document.getElementById('sfAuthor').value;
-  const pickup=document.getElementById('sfPickup').value;
-  const sort1=document.getElementById('sfSort1').value;
-  const sort2=document.getElementById('sfSort2').value;
-  const reception=D.article_reception||{};
-  const el=document.getElementById('storiesList');
 
-  // Compute global ranking by mention count (all articles)
-  const allRanked=[...bdArticles].map(a=>({...a,mentionCount:getArticleMatches(a.url).length}));
-  allRanked.sort((a,b)=>b.mentionCount-a.mentionCount);
-  const globalRank={};
-  allRanked.forEach((a,i)=>{globalRank[a.url]=i+1;});
+window.setLapsedFilter=function(f) {
+  window._lapsedFilter=f;
+  document.querySelectorAll('#lapsed-type-btns .seg').forEach(b=>b.classList.toggle('on',b.dataset.lf===f));
+  renderLapsedTable();
+};
+window.sortLapsed=function(col) {
+  const s=window._lapsedSort;
+  s.dir=s.col===col?(s.dir==='asc'?'desc':'asc'):(col==='amount'||col==='canceled_at'||col==='started_at'||col==='tenure_days'?'desc':'asc');
+  s.col=col;
+  const cols=['type','plan_name','amount','started_at','canceled_at','tenure_days','customer_id'];
+  document.querySelectorAll('#tab-churn .tbl th').forEach((th,i)=>{th.classList.remove('sa','sd');if(cols[i]===col)th.classList.add(s.dir==='asc'?'sa':'sd');});
+  renderLapsedTable();
+};
 
-  // Filter
-  let filtered=bdArticles.map(a=>({...a,mentionCount:getArticleMatches(a.url).length,rank:globalRank[a.url]||0}));
-  filtered=filtered.filter(a=>{
-    if(auth&&a.author!==auth)return false;
-    if(q&&!(a.title+' '+a.author+' '+(a.categories||[]).join(' ')).toLowerCase().includes(q))return false;
-    if(pickup==='yes'&&!a.mentionCount)return false;
-    if(pickup==='no'&&a.mentionCount)return false;
-    return true;
-  });
-
-  // Sort helper
-  function cmpVal(a,key,dir){
-    if(key==='rank')return dir==='desc'?a.mentionCount:-a.mentionCount;
-    if(key==='date')return dir==='desc'?-(a.published||'').localeCompare('z'):(a.published||'').localeCompare('');
-    if(key==='author')return 0;
-    if(key==='title')return 0;
-    return 0;
-  }
-  function sortFn(sortStr){
-    if(!sortStr)return null;
-    const[key,dir]=sortStr.split('-');
-    return(a,b)=>{
-      if(key==='rank')return dir==='desc'?b.mentionCount-a.mentionCount:a.mentionCount-b.mentionCount;
-      if(key==='date')return dir==='desc'?(b.published||'').localeCompare(a.published||''):(a.published||'').localeCompare(b.published||'');
-      if(key==='author')return dir==='asc'?(a.author||'').localeCompare(b.author||''):(b.author||'').localeCompare(a.author||'');
-      if(key==='title')return dir==='asc'?(a.title||'').localeCompare(b.title||''):(b.title||'').localeCompare(a.title||'');
+function renderLapsedTable() {
+  const f=window._lapsedFilter, s=window._lapsedSort;
+  const rows=allSubs.filter(x=>x.status==='canceled'&&(f==='all'||x.type===f))
+    .sort((a,b)=>{
+      let av=a[s.col],bv=b[s.col];
+      if(s.col==='amount'||s.col==='started_at'||s.col==='canceled_at'||s.col==='tenure_days'){av=Number(av||0);bv=Number(bv||0);}
+      else{av=String(av||'');bv=String(bv||'');}
+      if(av<bv) return s.dir==='asc'?-1:1;
+      if(av>bv) return s.dir==='asc'?1:-1;
       return 0;
+    });
+  const el=document.getElementById('lapsed-count');
+  if(el) el.textContent=`${fN(rows.length)} records`;
+  const tbody=document.getElementById('lapsed-tbody');
+  if(!tbody) return;
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-dim)">No lapsed subscribers match this filter</td></tr>`;return;}
+  tbody.innerHTML=rows.map(s=>{
+    const color=C[s.type]||'#888';
+    const startDate=s.started_at?ds(new Date(s.started_at*1000)):'—';
+    const cancelDate=s.canceled_at?ds(new Date(s.canceled_at*1000)):'—';
+    const tenure=s.tenure_days!=null?`${s.tenure_days}d`:'—';
+    return `<tr>
+      <td><span class="type-pill" style="background:${color}22;color:${color}">${LBL[s.type]||s.type}</span></td>
+      <td style="color:var(--text)">${esc(s.plan_name||'—')}</td>
+      <td style="color:var(--gold)">${f$(s.amount)}</td>
+      <td>${startDate}</td>
+      <td>${cancelDate}</td>
+      <td style="color:var(--text)">${tenure}</td>
+      <td style="color:var(--text-dim);font-size:9px">${esc(s.customer_id||'—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// PAYMENTS TAB — daily consolidated view
+// ════════════════════════════════════════════════
+function renderPayTable(from,to) {
+  if(!from){const r=getRange(period);from=r.from;to=r.to;}
+
+  // Build summary by type
+  const byType={};
+  payCache.forEach(p=>{byType[p.type]=byType[p.type]||{count:0,amount:0};byType[p.type].count++;byType[p.type].amount+=p.amount;});
+  const totalRev=payCache.reduce((s,p)=>s+p.amount,0);
+  const sumEl=document.getElementById('pay-summary');
+  if(sumEl) sumEl.innerHTML=Object.entries(byType).map(([t,v])=>{
+    const pct=totalRev>0?(v.amount/totalRev)*100:0;
+    return `<div class="sum-row">
+      <div class="sum-lbl" style="color:${C[t]||'#888'}">${LBL[t]||t}</div>
+      <div class="sum-track"><div class="sum-fill" style="width:${pct}%;background:${C[t]||'#888'}"></div></div>
+      <div class="sum-val">${f$(v.amount)} <span style="color:var(--text-dim)">${fN(v.count)}×</span></div>
+    </div>`;
+  }).join('')+`<div style="padding-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">Total: <span style="color:var(--gold)">${f$(totalRev)}</span> · ${fN(payCache.length)} payments</div>`;
+
+  const pl=document.getElementById('pay-period-lbl'); if(pl) pl.textContent=`${ds(from)} → ${ds(to)}`;
+  renderPayRows();
+}
+
+function renderPayRows() {
+  // Consolidate by day
+  const filtered = payCache.filter(p=>payFilter==='all'||p.type===payFilter);
+  const dayMap = {};
+  filtered.forEach(p => {
+    if(!dayMap[p.date]) dayMap[p.date]={date:p.date,total:0,count:0,monthly:{r:0,n:0},annual:{r:0,n:0},corporate:{r:0,n:0},event:{r:0,n:0},free:{r:0,n:0},other:{r:0,n:0}};
+    const d=dayMap[p.date];
+    d.total+=p.amount; d.count++;
+    if(d[p.type]){d[p.type].r+=p.amount;d[p.type].n++;}
+    else{d.other.r+=p.amount;d.other.n++;}
+  });
+
+  const rows=Object.values(dayMap).sort((a,b)=>{
+    if(paySort.col==='date') return paySort.dir==='asc'?a.date.localeCompare(b.date):b.date.localeCompare(a.date);
+    if(paySort.col==='total') return paySort.dir==='asc'?a.total-b.total:b.total-a.total;
+    if(paySort.col==='count') return paySort.dir==='asc'?a.count-b.count:b.count-a.count;
+    return 0;
+  });
+
+  const el=document.getElementById('pay-count'); if(el) el.textContent=`${fN(rows.length)} days · ${fN(filtered.length)} payments`;
+  const tbody=document.getElementById('pay-tbody'); if(!tbody) return;
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-dim)">No payments match this filter</td></tr>`;return;}
+
+  const cell=(d,t)=>d[t]&&d[t].r?`<span style="color:var(--gold)">${f$(d[t].r)}</span> <span style="color:var(--text-dim);font-size:9px">${d[t].n}×</span>`:`<span style="color:var(--text-dim)">—</span>`;
+
+  tbody.innerHTML=rows.map(d=>`<tr>
+    <td style="color:var(--text)">${d.date}</td>
+    <td style="text-align:right;color:var(--gold);font-weight:500">${f$(d.total)}</td>
+    <td style="text-align:right;color:var(--text)">${fN(d.count)}</td>
+    <td style="text-align:right">${cell(d,'monthly')}</td>
+    <td style="text-align:right">${cell(d,'annual')}</td>
+    <td style="text-align:right">${cell(d,'corporate')}</td>
+    <td style="text-align:right">${cell(d,'event')}</td>
+    <td style="text-align:right">${cell(d,'free')}</td>
+    <td style="text-align:right">${cell(d,'other')}</td>
+  </tr>`).join('');
+}
+
+function setPayFilter(f){
+  payFilter=f;
+  document.querySelectorAll('#pay-type-btns .seg').forEach(b=>b.classList.toggle('on',b.dataset.pf===f));
+  renderPayRows();
+}
+function sortPay(col){
+  paySort.dir=paySort.col===col?(paySort.dir==='asc'?'desc':'asc'):(col==='total'||col==='count'?'desc':'asc');
+  paySort.col=col;
+  // Update sort indicators
+  ['date','total','count'].forEach(c=>{
+    const el=document.getElementById(`pth-${c}`); if(!el) return;
+    el.classList.remove('sa','sd');
+    if(c===col) el.classList.add(paySort.dir==='asc'?'sa':'sd');
+  });
+  renderPayRows();
+}
+
+// ════════════════════════════════════════════════
+// TRENDS
+// ════════════════════════════════════════════════
+function renderTrends(from, to) {
+  if(!from || !to) { const r=getRange(period); from=r.from; to=r.to; }
+  if(allSnapshots.length<2){
+    ['trend-mrr','trend-subs','trend-churn','trend-tenure'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.innerHTML='<div class="empty" style="padding:24px">Run the scraper daily to build trend history.</div>';
+    });
+    return;
+  }
+  const snaps=allSnapshots.slice(-90);
+  lineChart('trend-mrr',   snaps,[{key:'mrr',color:C.annual,label:'MRR'}],f$);
+  renderSubsPieCharts(from, to);
+  renderGrowthChart(snaps);
+  renderTenureTable(from, to);
+}
+
+function renderTenureTable(from, to) {
+  const el = document.getElementById('trend-tenure');
+  if(!el) return;
+
+  const fromStr = ds(from), toStr = ds(to);
+  const types = ['monthly','annual','corporate','free'];
+
+  // Compute median tenure from subs canceled on or before a given date
+  function medianTenureAsOf(type, dateStr) {
+    const ts = new Date(dateStr + 'T23:59:59Z').getTime() / 1000;
+    const tenures = [];
+    allSubs.forEach(s => {
+      if(s.type !== type) return;
+      if(s.status !== 'canceled' || !s.canceled_at) return;
+      if(s.canceled_at > ts) return;
+      const started = s.started_at || 0;
+      if(!started) return;
+      const tenure = Math.max(0, Math.round((s.canceled_at - started) / 86400));
+      if(tenure > 0) tenures.push(tenure);
+    });
+    if(!tenures.length) return null;
+    const sorted = [...tenures].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid-1] + sorted[mid]) / 2);
+  }
+
+  // Count of canceled subs as of a date
+  function canceledCountAsOf(type, dateStr) {
+    const ts = new Date(dateStr + 'T23:59:59Z').getTime() / 1000;
+    return allSubs.filter(s => s.type === type && s.status === 'canceled' && s.canceled_at && s.canceled_at <= ts && s.started_at).length;
+  }
+
+  const rows = types.map(t => {
+    const startVal = medianTenureAsOf(t, fromStr);
+    const endVal   = medianTenureAsOf(t, toStr);
+    const startN   = canceledCountAsOf(t, fromStr);
+    const endN     = canceledCountAsOf(t, toStr);
+
+    let arrow, arrowColor;
+    if(startVal == null || endVal == null) {
+      arrow = '—'; arrowColor = '#706878';
+    } else if(endVal > startVal) {
+      arrow = '▲'; arrowColor = '#5cbfb0'; // green = increasing tenure (good)
+    } else if(endVal < startVal) {
+      arrow = '▼'; arrowColor = '#e05c5c'; // red = decreasing tenure (bad)
+    } else {
+      arrow = '▶'; arrowColor = '#d4aa4f'; // yellow = flat
+    }
+
+    const fmtVal = v => v != null ? v + 'd' : '—';
+    const fmtMo  = v => v != null ? Math.round(v / 30.4 * 10) / 10 + 'mo' : '';
+
+    return { type: t, startVal, endVal, startN, endN, arrow, arrowColor, fmtVal, fmtMo };
+  });
+
+  const tableStyle = `
+    font-family:var(--font-mono);font-size:12px;
+    width:100%;max-width:600px;margin:12px auto;
+    border-collapse:collapse;
+  `;
+  const thStyle = `
+    font-family:Sora,sans-serif;font-size:10px;font-weight:600;
+    color:#706878;text-transform:uppercase;letter-spacing:0.5px;
+    padding:6px 12px;text-align:center;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  `;
+  const tdStyle = `padding:8px 12px;text-align:center;`;
+  const tdTypeStyle = `padding:8px 12px;text-align:left;font-weight:600;`;
+
+  let html = `<table style="${tableStyle}">
+    <thead><tr>
+      <th style="${thStyle}text-align:left;">Type</th>
+      <th style="${thStyle}">${fromStr}</th>
+      <th style="${thStyle}width:40px;"></th>
+      <th style="${thStyle}">${toStr}</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach(r => {
+    const startSub = r.startN ? `<div style="font-size:9px;color:#706878">n=${fN(r.startN)}</div>` : '';
+    const endSub   = r.endN   ? `<div style="font-size:9px;color:#706878">n=${fN(r.endN)}</div>` : '';
+    const moStart  = r.fmtMo(r.startVal) ? `<span style="font-size:9px;color:#706878;margin-left:4px">(${r.fmtMo(r.startVal)})</span>` : '';
+    const moEnd    = r.fmtMo(r.endVal)   ? `<span style="font-size:9px;color:#706878;margin-left:4px">(${r.fmtMo(r.endVal)})</span>` : '';
+
+    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+      <td style="${tdTypeStyle}color:${C[r.type]}">${LBL[r.type]}</td>
+      <td style="${tdStyle}">${r.fmtVal(r.startVal)}${moStart}${startSub}</td>
+      <td style="${tdStyle}font-size:16px;color:${r.arrowColor}">${r.arrow}</td>
+      <td style="${tdStyle}">${r.fmtVal(r.endVal)}${moEnd}${endSub}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  el.innerHTML = html;
+}
+
+function renderSubsPieCharts(from, to) {
+  const el = document.getElementById('trend-subs');
+  if(!el) return;
+
+  const fromStr = ds(from), toStr = ds(to);
+  const types = ['monthly','annual','corporate','free'];
+
+  // Find nearest snapshot on or before the from/to dates
+  function nearestSnap(dateStr) {
+    let best = null;
+    for(const sn of allSnapshots) {
+      if(sn.date <= dateStr) best = sn;
+      else break; // snapshots are sorted by date
+    }
+    return best;
+  }
+
+  const startSnap = nearestSnap(fromStr);
+  const endSnap   = nearestSnap(toStr);
+
+  // If no snapshots in range, fall back to reconstructing from allSubs
+  function countsFromSubs(dateStr) {
+    const ts = new Date(dateStr + 'T23:59:59Z').getTime() / 1000;
+    const counts = {monthly:0, annual:0, corporate:0, free:0};
+    allSubs.forEach(s => {
+      if(!types.includes(s.type)) return;
+      const started = s.started_at || 0;
+      if(started > ts) return;
+      const canceled = s.canceled_at;
+      if(canceled && canceled < ts - 86400) return; // canceled before this date
+      counts[s.type]++;
+    });
+    return counts;
+  }
+
+  function snapToCounts(sn) {
+    if(!sn) return null;
+    return {
+      monthly:   sn.active_monthly   || 0,
+      annual:    sn.active_annual    || 0,
+      corporate: sn.active_corporate || 0,
+      free:      sn.active_free      || 0,
     };
   }
-  const fn1=sortFn(sort1), fn2=sortFn(sort2);
-  filtered.sort((a,b)=>{
-    const r1=fn1?fn1(a,b):0;
-    if(r1!==0||!fn2)return r1;
-    return fn2(a,b);
-  });
 
-  if(!filtered.length){el.innerHTML='<div class="empty-state"><p>No articles match filters</p></div>';return;}
+  const startCounts = startSnap ? snapToCounts(startSnap) : countsFromSubs(fromStr);
+  const endCounts   = endSnap   ? snapToCounts(endSnap)   : countsFromSubs(toStr);
 
-  el.innerHTML=filtered.map(a=>{
-    const refs=getArticleMatches(a.url);
-    const artRec=reception[a.url]||{};
-    let recText='',recTier='';
-    for(const t of['30day','7day','2day']){if(artRec[t]){recText=artRec[t].text;recTier=t;break;}}
-    const tierLabels={'2day':'2-Day Reception','7day':'1-Week Reception','30day':'1-Month Reception'};
-    const rank=a.rank;
-    return'<div class="story-card"><div class="sc-header"><span style="font-family:JetBrains Mono;font-size:.75rem;color:#555;min-width:30px">#'+rank+'</span><div class="sc-title"><a href="'+esc(a.url)+'" target="_blank">'+esc(a.title)+'</a></div></div><div class="sc-meta"><span class="sc-author">'+esc(a.author)+'</span><span>'+fmtDate(a.published)+'</span><span>'+a.mentionCount+' mention'+(a.mentionCount!==1?'s':'')+'</span><span>'+esc((a.categories||[]).join(', '))+'</span></div>'+
-      (recText?'<div class="sc-reception has-data"><div class="tier-label">'+(tierLabels[recTier]||'Reception')+'</div>'+formatSummary(recText)+'</div>':(refs.length?'<div class="sc-reception">AI reception summary pending (generated at 2-day, 7-day, 30-day marks).</div>':'<div class="no-pickup">No third-party pickup detected</div>'))+
-      (refs.length?'<button class="expand-btn" onclick="toggleRefs(this)">View online references ('+refs.length+')</button><div class="ref-list">'+refs.map(r=>'<a href="'+esc(r.url)+'" target="_blank">'+esc(r.title)+'<span class="ref-source">'+esc(r.source)+'</span></a>').join('')+'</div>':'')+'</div>';
-  }).join('');
-}
-['sfSearch','sfAuthor','sfPickup','sfSort1','sfSort2'].forEach(id=>{document.getElementById(id).addEventListener(id==='sfSearch'?'input':'change',doRenderStories);});
-function toggleRefs(btn){const l=btn.nextElementSibling;const open=l.classList.toggle('open');btn.textContent=open?'Hide references':'View online references ('+l.children.length+')';}
-
-// ═══ BYLINE (#5) ═══
-function renderByline(){
-  const el=document.getElementById('bylineContent');
-  if(!bdArticles.length){el.innerHTML='<div class="empty-state"><p>No BusinessDen articles tracked yet.</p></div>';return;}
-
-  // Compute global ranking by mention count
-  const globalRanked=[...bdArticles].map(a=>({url:a.url,title:a.title,author:a.author,mentions:getArticleMatches(a.url).length}));
-  globalRanked.sort((a,b)=>b.mentions-a.mentions);
-  const globalRank={};globalRanked.forEach((a,i)=>{globalRank[a.url]=i+1;});
-
-  // Build reporter stats from data (always works, no AI needed)
-  const reporterData={};
-  bdArticles.forEach(a=>{
-    const author=a.author||'Unknown';
-    if(!reporterData[author])reporterData[author]={total:0,pickedUp:0,articles:[]};
-    reporterData[author].total++;
-    const refs=getArticleMatches(a.url);
-    if(refs.length){
-      reporterData[author].pickedUp++;
-      reporterData[author].articles.push({
-        title:a.title, published:a.published, url:a.url,
-        mentions:refs.length,
-        outlets:refs.map(r=>r.source).filter((v,i,a)=>a.indexOf(v)===i).slice(0,6)
-      });
-    }
-  });
-
-  // Compute per-author rankings
-  const authorRank={};
-  Object.entries(reporterData).forEach(([name,rd])=>{
-    const sorted=[...rd.articles].sort((a,b)=>b.mentions-a.mentions);
-    sorted.forEach((a,i)=>{authorRank[a.url]=i+1;});
-  });
-
-  // Get AI text per reporter if available
-  const bylines=D.byline||[];
-  const latest=bylines.length?bylines[bylines.length-1]:null;
-  let aiSections={};
-  if(latest&&latest.text){
-    // Parse AI text into per-reporter sections
-    const reporters=latest.reporters||Object.keys(reporterData);
-    let currentName='',currentText='';
-    latest.text.split('\n').forEach(line=>{
-      let matched=false;
-      for(const r of reporters){
-        if(line.toLowerCase().includes(r.toLowerCase())&&(line.startsWith('#')||line.startsWith('**')||line.match(/^[A-Z]/))){
-          if(currentName&&currentText.trim())aiSections[currentName]=currentText.trim();
-          currentName=r;currentText='';matched=true;break;
-        }
-      }
-      if(!matched)currentText+=line+'\n';
-    });
-    if(currentName&&currentText.trim())aiSections[currentName]=currentText.trim();
+  if(!startCounts || !endCounts) {
+    el.innerHTML = '<div class="empty" style="padding:24px">No snapshot data available for this period.</div>';
+    return;
   }
 
-  // Sort reporters: most pickups first
-  const sorted=Object.entries(reporterData).sort((a,b)=>b[1].pickedUp-a[1].pickedUp);
+  const startTotal = types.reduce((s,t) => s + startCounts[t], 0);
+  const endTotal   = types.reduce((s,t) => s + endCounts[t], 0);
+  const maxTotal   = Math.max(startTotal, endTotal, 1);
 
-  el.innerHTML=sorted.map(([name,rd])=>{
-    const rate=rd.total?Math.round(rd.pickedUp/rd.total*100):0;
-    let articlesHtml='';
-    if(rd.articles.length){
-      // Top 3 by mention count (all-time highest)
-      const byMentions=[...rd.articles].sort((a,b)=>b.mentions-a.mentions);
-      const top3=byMentions.slice(0,3);
-      // All articles in reverse chronological for the expand
-      const allChrono=[...rd.articles].sort((a,b)=>(b.published||'').localeCompare(a.published||''));
-      const uid='byline-arts-'+name.replace(/\s/g,'-');
+  // Scale pie radius proportionally to total — min 40% of max radius
+  const maxR = 70;
+  const startR = Math.max(maxR * 0.4, maxR * Math.sqrt(startTotal / maxTotal));
+  const endR   = Math.max(maxR * 0.4, maxR * Math.sqrt(endTotal / maxTotal));
 
-      const firstName=name.split(' ')[0];
-      const renderArticle=a=>{
-        const gR=globalRank[a.url]||'–';
-        const aR=authorRank[a.url]||'–';
-        return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #1a1d25;font-size:.82rem;align-items:flex-start">'+
-          '<div style="min-width:52px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;padding-top:2px">'+
-            '<span style="font-family:JetBrains Mono;font-size:.72rem;color:#3b82f6;font-weight:600">#'+gR+'</span>'+
-            '<span style="font-family:JetBrains Mono;font-size:.65rem;color:#555">'+firstName+' #'+aR+'</span>'+
-          '</div>'+
-          '<div style="flex:1">'+
-            '<span style="color:#c8cad0;font-weight:500">'+esc(a.title)+'</span>'+
-            '<span style="color:#555;margin-left:12px;font-size:.75rem" class="mono">'+fmtDate(a.published)+'</span>'+
-            '<br><span style="color:#555;font-size:.72rem">'+a.mentions+' mention'+(a.mentions!==1?'s':'')+' — '+a.outlets.map(o=>'<span style="color:#f5a623;font-weight:600">'+esc(o)+'</span>').join(', ')+'</span>'+
-          '</div>'+
-        '</div>';
-      };
+  const startDate = startSnap ? startSnap.date : fromStr;
+  const endDate   = endSnap   ? endSnap.date   : toStr;
 
-      articlesHtml='<div style="margin-top:14px">';
-      articlesHtml+='<div style="font-size:.68rem;color:#555;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px">Top stories by pickup</div>';
-      top3.forEach(a=>{articlesHtml+=renderArticle(a);});
-
-      if(rd.articles.length>3){
-        articlesHtml+='<div id="'+uid+'" style="display:none">';
-        articlesHtml+='<div style="font-size:.68rem;color:#555;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin:12px 0 6px">All stories (newest first)</div>';
-        allChrono.forEach(a=>{articlesHtml+=renderArticle(a);});
-        articlesHtml+='</div>';
-        articlesHtml+='<button class="expand-btn" style="margin-top:8px" onclick="var el=document.getElementById(\''+uid+'\');var open=el.style.display!==\'none\';el.style.display=open?\'none\':\'block\';this.textContent=open?\'Show top 3\':\'Show more stories ('+(rd.articles.length-3)+')\'">Show more stories ('+(rd.articles.length-3)+')</button>';
-      }
-      articlesHtml+='</div>';
+  function drawPie(cx, cy, r, counts, total) {
+    if(!total) {
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,0.05)"/>`;
     }
-    const aiText=aiSections[name];
-    // Calculate avg articles per week
-    const pubDates=bdArticles.filter(a=>a.author===name).map(a=>a.published).filter(Boolean).sort();
-    let avgPerWeek='–';
-    if(pubDates.length>=2){
-      const first=new Date(pubDates[0]),last=new Date(pubDates[pubDates.length-1]);
-      const weeks=Math.max(1,(last-first)/(7*86400000));
-      avgPerWeek=(rd.total/weeks).toFixed(1);
-    } else if(pubDates.length===1){avgPerWeek=rd.total.toFixed(1);}
-    const totalMentions=rd.articles.reduce((s,a)=>s+a.mentions,0);
-    const avgMentions=rd.total?(totalMentions/rd.total).toFixed(1):'0';
+    let svg = '';
+    let angle = -Math.PI / 2;
+    types.forEach(t => {
+      const v = counts[t];
+      if(!v) return;
+      const slice = (v / total) * Math.PI * 2;
+      const endAngle = angle + slice;
+      const large = slice > Math.PI ? 1 : 0;
+      const x1 = cx + r * Math.cos(angle);
+      const y1 = cy + r * Math.sin(angle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+      // Full circle edge case
+      if(slice >= Math.PI * 2 - 0.001) {
+        svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${C[t]}"/>`;
+      } else {
+        svg += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${C[t]}"/>`;
+      }
+      angle = endAngle;
+    });
+    // Center hole for donut effect
+    const inner = r * 0.45;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${inner}" fill="#0d0d14"/>`;
+    // Total in center
+    svg += `<text x="${cx}" y="${cy+1}" fill="#c8c0cc" font-size="13" font-weight="bold" text-anchor="middle" dominant-baseline="middle" font-family="JetBrains Mono">${fN(total)}</text>`;
+    return svg;
+  }
 
-    return '<div class="byline-card"><h3>'+esc(name)+'</h3>'+
-      '<div class="byline-stats">'+
-        '<div class="byline-stat"><span class="bs-val">'+rd.total+'</span><span class="bs-label">Articles tracked</span></div>'+
-        '<div class="byline-stat"><span class="bs-val">'+totalMentions+'</span><span class="bs-label">Total mentions</span></div>'+
-        '<div class="byline-stat"><span class="bs-val">'+avgMentions+'</span><span class="bs-label">Avg. mentions/article</span></div>'+
-        '<div class="byline-stat"><span class="bs-val">'+avgPerWeek+'</span><span class="bs-label">Avg. articles/week</span></div>'+
-      '</div>'+
-      (aiText?'<div class="byline-body">'+formatSummary(aiText)+'</div>':'')+
-      articlesHtml+
-    '</div>';
+  const W = 800, H = 200;
+  const lcx = W * 0.25, rcx = W * 0.75, cy = 95;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="height:${H}px;width:100%">`;
+
+  // Left pie — Start of Period
+  svg += drawPie(lcx, cy, startR, startCounts, startTotal);
+  svg += `<text x="${lcx}" y="16" fill="#c8c0cc" font-size="11" font-weight="600" text-anchor="middle" font-family="Sora">Start of Period</text>`;
+  svg += `<text x="${lcx}" y="${H - 6}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${startDate}</text>`;
+
+  // Right pie — End of Period
+  svg += drawPie(rcx, cy, endR, endCounts, endTotal);
+  svg += `<text x="${rcx}" y="16" fill="#c8c0cc" font-size="11" font-weight="600" text-anchor="middle" font-family="Sora">End of Period</text>`;
+  svg += `<text x="${rcx}" y="${H - 6}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${endDate}</text>`;
+
+  // Delta summary between the pies
+  const delta = endTotal - startTotal;
+  const deltaLbl = delta >= 0 ? '+' + fN(delta) : fN(delta);
+  const deltaColor = delta >= 0 ? '#5cbfb0' : '#e05c5c';
+  svg += `<text x="${W/2}" y="${cy - 8}" fill="${deltaColor}" font-size="14" font-weight="700" text-anchor="middle" font-family="JetBrains Mono">${deltaLbl}</text>`;
+  svg += `<text x="${W/2}" y="${cy + 8}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">net change</text>`;
+
+  // Arrow
+  svg += `<line x1="${W/2 - 18}" y1="${cy + 20}" x2="${W/2 + 18}" y2="${cy + 20}" stroke="${deltaColor}" stroke-width="1.5" opacity="0.5"/>`;
+  svg += `<polygon points="${W/2 + 18},${cy + 17} ${W/2 + 18},${cy + 23} ${W/2 + 24},${cy + 20}" fill="${deltaColor}" opacity="0.5"/>`;
+
+  svg += `</svg>`;
+
+  // Legend
+  const legItems = types.map(t =>
+    `<div class="trend-leg-item"><div style="width:10px;height:10px;background:${C[t]};flex-shrink:0"></div>${LBL[t]}</div>`
+  ).join('');
+
+  // Breakdown table
+  const breakdownRows = types.map(t => {
+    const sv = startCounts[t], ev = endCounts[t], d = ev - sv;
+    const dLbl = d >= 0 ? '+'+d : String(d);
+    const dCol = d >= 0 ? '#5cbfb0' : '#e05c5c';
+    return `<span style="color:${C[t]};font-weight:500">${LBL[t]}</span> ${sv} → ${ev} <span style="color:${dCol}">(${dLbl})</span>`;
+  }).join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+
+  el.innerHTML = svg +
+    `<div class="trend-leg" style="margin-top:4px">${legItems}</div>` +
+    `<div style="text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:4px">${breakdownRows}</div>`;
+}
+
+function renderGrowthChart(snaps) {
+  const el = document.getElementById('trend-churn');
+  if(!el) return;
+
+  // Build daily new/canceled counts from allSubs, keyed by date string
+  const dailyNew = {}, dailyCanceled = {};
+  allSubs.forEach(s => {
+    if(s.started_at) {
+      const d = ds(new Date(s.started_at * 1000));
+      dailyNew[d] = (dailyNew[d] || 0) + 1;
+    }
+    if(s.status === 'canceled' && s.canceled_at) {
+      const d = ds(new Date(s.canceled_at * 1000));
+      dailyCanceled[d] = (dailyCanceled[d] || 0) + 1;
+    }
+  });
+
+  // Map onto snapshot dates
+  const days = snaps.map(sn => {
+    const d = sn.date;
+    const nw = dailyNew[d] || 0;
+    const cn = dailyCanceled[d] || 0;
+    return { date: d, newCount: nw, canceledCount: cn, net: nw - cn };
+  });
+
+  // Cumulative net gain across the snapshot window
+  let cumNet = 0;
+  days.forEach(d => { cumNet += d.net; d.cumNet = cumNet; });
+
+  // Bar scale (left axis)
+  const maxBar = Math.max(...days.map(d => Math.max(d.newCount, d.canceledCount)), 1);
+
+  // Cumulative net scale (right axis)
+  const cumVals = days.map(d => d.cumNet);
+  const cumMax = Math.max(...cumVals, 1);
+  const cumMin = Math.min(...cumVals, 0);
+  const cumRange = Math.max(cumMax - cumMin, 1);
+
+  const W=800, H=140, PL=52, PR=42, PT=8, PB=20, IW=W-PL-PR, IH=H-PT-PB;
+  const n = days.length;
+  const bw = IW / n;
+  const barW = Math.max(1, bw * 0.35);
+
+  const xC = i => PL + i * bw + bw / 2;
+  const yBar = v => PT + IH - (v / maxBar) * IH;
+  const yCum = v => PT + IH - ((v - cumMin) / cumRange) * IH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Left axis grid (bar scale)
+  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+    const v = Math.round(t * maxBar);
+    const y = yBar(v);
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${v}</text>`;
+  });
+
+  // Right axis labels (cumulative net scale)
+  [0, 0.5, 1].forEach(t => {
+    const v = cumMin + t * cumRange;
+    const y = yCum(v);
+    const lbl = Math.round(v) >= 0 ? '+'+Math.round(v) : String(Math.round(v));
+    svg+=`<text x="${W-PR+4}" y="${y+4}" fill="${C.annual}" font-size="8" text-anchor="start" font-family="JetBrains Mono" opacity="0.7">${lbl}</text>`;
+  });
+
+  // Bars — new (green-ish) on left, canceled (red) on right
+  const newColor = '#5cbfb0';
+  const cancelColor = '#e05c5c';
+  days.forEach((d, i) => {
+    const cx = xC(i);
+    // New bar — left of center
+    if(d.newCount > 0) {
+      const bh = (d.newCount / maxBar) * IH;
+      svg+=`<rect x="${cx - barW - 0.5}" y="${yBar(d.newCount)}" width="${barW}" height="${bh}" fill="${newColor}" opacity="0.8"/>`;
+    }
+    // Canceled bar — right of center
+    if(d.canceledCount > 0) {
+      const bh = (d.canceledCount / maxBar) * IH;
+      svg+=`<rect x="${cx + 0.5}" y="${yBar(d.canceledCount)}" width="${barW}" height="${bh}" fill="${cancelColor}" opacity="0.6"/>`;
+    }
+  });
+
+  // Cumulative net line
+  const cumPts = days.map((d, i) => `${xC(i)},${yCum(d.cumNet)}`).join(' ');
+  svg+=`<polyline points="${cumPts}" fill="none" stroke="${C.annual}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`;
+
+  // Zero line for cumulative if range crosses zero
+  if(cumMin < 0) {
+    const y0 = yCum(0);
+    svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="${C.annual}" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>`;
+  }
+
+  // X date labels
+  const xLabels = [0, Math.floor(n/2), n-1];
+  xLabels.forEach(i => {
+    if(i >= 0 && i < n)
+      svg+=`<text x="${xC(i)}" y="${H}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${days[i].date.slice(5)}</text>`;
+  });
+
+  // End-of-line cumulative label
+  const lastCum = days[days.length - 1].cumNet;
+  const lastLbl = lastCum >= 0 ? '+'+lastCum : String(lastCum);
+  svg+=`<text x="${xC(n-1)+4}" y="${yCum(lastCum)-5}" fill="${C.annual}" font-size="9" font-family="JetBrains Mono" font-weight="600">${lastLbl}</text>`;
+
+  svg+=`</svg>`;
+
+  el.innerHTML = svg + `<div class="trend-leg">
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${newColor};opacity:0.8;flex-shrink:0"></div>New (daily)</div>
+    <div class="trend-leg-item"><div style="width:10px;height:10px;background:${cancelColor};opacity:0.6;flex-shrink:0"></div>Canceled (daily)</div>
+    <div class="trend-leg-item"><div class="trend-leg-line" style="background:${C.annual}"></div>Cumulative Net</div>
+  </div>`;
+}
+
+function lineChart(id,snaps,series,fmt) {
+  const el=document.getElementById(id); if(!el) return;
+  const W=800,H=120,PL=52,PR=10,PT=8,PB=20,IW=W-PL-PR,IH=H-PT-PB;
+  let mn=Infinity,mx=-Infinity;
+  series.forEach(s=>snaps.forEach(sn=>{const v=sn[s.key]||0;if(v<mn)mn=v;if(v>mx)mx=v;}));
+  if(mn===mx){mn=mn-1;mx=mx+1;}
+  // Add ~5% padding above and below the data range
+  const pad=(mx-mn)*0.05;
+  mn-=pad; mx+=pad;
+  const xS=i=>PL+(i/(snaps.length-1||1))*IW;
+  const yS=v=>PT+IH-((v-mn)/(mx-mn))*IH;
+  const grid=[0,.25,.5,.75,1].map(t=>{const v=mn+t*(mx-mn),y=yS(v);
+    return `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${fmt(v)}</text>`;
+  }).join('');
+  const paths=series.map(s=>{
+    const pts=snaps.map((sn,i)=>`${xS(i)},${yS(sn[s.key]||0)}`).join(' ');
+    return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join('');
+  const lbls=[0,Math.floor(snaps.length/2),snaps.length-1].map(i=>i>=0&&i<snaps.length?
+    `<text x="${xS(i)}" y="${H}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${snaps[i].date.slice(5)}</text>`:''
+  ).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">${grid}${paths}${lbls}</svg>
+    <div class="trend-leg">${series.map(s=>`<div class="trend-leg-item"><div class="trend-leg-line" style="background:${s.color}"></div>${s.label}</div>`).join('')}</div>`;
+}
+
+// ════════════════════════════════════════════════
+// FORECASTING TAB
+// ════════════════════════════════════════════════
+function renderForecasting() {
+  const el = document.getElementById('forecasting-body');
+  if(!el || !allPayments.length) return;
+
+  // Build cumulative revenue by year
+  const yearData = {};
+  allPayments.forEach(p => {
+    // Parse YYYY-MM-DD as local date to avoid UTC offset issues
+    const [py, pm, pd] = p.date.split('-').map(Number);
+    const y = py;
+    const doy = Math.floor((new Date(y, pm-1, pd) - new Date(y, 0, 1)) / 86400000);
+    if(!yearData[y]) yearData[y] = {};
+    yearData[y][doy] = (yearData[y][doy] || 0) + p.amount;
+  });
+
+  // Convert to cumulative — use actual days in year for array size
+  const years = Object.keys(yearData).map(Number).sort();
+  const daysInYear = y => (y%4===0&&(y%100!==0||y%400===0)) ? 366 : 365;
+  const cumulative = {};
+  years.forEach(y => {
+    const days = daysInYear(y);
+    cumulative[y] = new Array(days).fill(0);
+    let sum = 0;
+    for(let d=0; d<days; d++) {
+      sum += yearData[y][d] || 0;
+      cumulative[y][d] = sum;
+    }
+  });
+
+  // Current day of year (local time)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentDoy = Math.floor((new Date(currentYear, now.getMonth(), now.getDate()) - new Date(currentYear, 0, 1)) / 86400000);
+  const daysThisYear = daysInYear(currentYear);
+
+  // Trailing 12 months revenue — parse payment dates as local
+  const t12Start = new Date(now.getFullYear()-1, now.getMonth(), now.getDate());
+  const t12Rev = allPayments.filter(p => {
+    const [py,pm,pd] = p.date.split('-').map(Number);
+    const d = new Date(py, pm-1, pd);
+    return d >= t12Start && d <= now;
+  }).reduce((s,p)=>s+p.amount, 0);
+  const dailyRate = t12Rev / 365;
+  const remainingDays = daysThisYear - currentDoy;
+  const forecastRemaining = Math.round(dailyRate * remainingDays);
+  const currentYearToDate = cumulative[currentYear]?.[currentDoy] || 0;
+  const forecastTotal = currentYearToDate + forecastRemaining;
+
+  // Color scheme: current year = gold, prior years = muted reds descending
+  const priorYears = years.filter(y=>y!==currentYear);
+  const priorColors = priorYears.map((y,i) => {
+    // Most recent prior year (last index) = brightest, oldest = darkest
+    const total = priorYears.length;
+    const brightness = Math.round(Math.max(80, 180 - (total - 1 - i) * Math.min(20, 100/Math.max(total,1))));
+    return `rgb(${brightness},${Math.round(brightness*0.35)},${Math.round(brightness*0.35)})`;
+  });
+
+  // KPIs
+  const kpiHtml = `<div class="forecast-kpi">
+    <div class="kpi" style="--kc:var(--gold)">
+      <div class="kpi-lbl">YTD Revenue ${currentYear}</div>
+      <div class="kpi-val ac">${f$(currentYearToDate)}</div>
+      <div class="kpi-sub">through ${ds(now)}</div>
+    </div>
+    <div class="kpi" style="--kc:var(--c-free)">
+      <div class="kpi-lbl">Forecast — Full Year ${currentYear}</div>
+      <div class="kpi-val ac">${f$(forecastTotal)}</div>
+      <div class="kpi-sub">based on trailing 12mo rate</div>
+    </div>
+    <div class="kpi" style="--kc:var(--c-monthly)">
+      <div class="kpi-lbl">Trailing 12mo Revenue</div>
+      <div class="kpi-val">${f$(t12Rev)}</div>
+      <div class="kpi-sub">${f$(Math.round(dailyRate*30))} / month avg</div>
+    </div>
+    <div class="kpi" style="--kc:var(--c-corporate)">
+      <div class="kpi-lbl">Projected Remaining</div>
+      <div class="kpi-val">${f$(forecastRemaining)}</div>
+      <div class="kpi-sub">${fN(remainingDays)} days left in ${currentYear}</div>
+    </div>
+  </div>`;
+
+  // Chart
+  const W=800, H=220, PL=60, PR=80, PT=12, PB=28, IW=W-PL-PR, IH=H-PT-PB;
+  const maxVal = Math.max(...years.map(y=>{const last=daysInYear(y)-1; return cumulative[y]?.[last]||0;}), forecastTotal, 1);
+  const xS = doy => PL + (doy/363)*IW;
+  const yS = v => PT + IH - (v/maxVal)*IH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px;width:100%">`;
+
+  // Grid
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    const v=t*maxVal, y=yS(v);
+    svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    svg+=`<text x="${PL-4}" y="${y+4}" fill="#706878" font-size="9" text-anchor="end" font-family="JetBrains Mono">${f$(v)}</text>`;
+  });
+
+  // Month x-axis labels
+  [0,31,59,90,120,151,181,212,243,273,304,334].forEach((doy,mi)=>{
+    const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mi];
+    svg+=`<text x="${xS(doy)}" y="${H-2}" fill="#706878" font-size="9" text-anchor="middle" font-family="JetBrains Mono">${mo}</text>`;
+  });
+
+  // Prior year lines
+  priorYears.forEach((y,i)=>{
+    const col = priorColors[i];
+    const days = daysInYear(y);
+    const pts = [];
+    for(let d=0; d<days; d+=2) {
+      const v=cumulative[y]?.[d];
+      if(v===undefined) continue; // only skip missing data, not zeros
+      pts.push(`${xS(d)},${yS(v)}`);
+    }
+    if(pts.length>1) svg+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.2" opacity="0.7"/>`;
+    // Year label — placed at right edge within PR padding
+    const lastV=cumulative[y]?.[days-1]||0;
+    if(lastV>0) svg+=`<text x="${W-PR+4}" y="${yS(lastV)+4}" fill="${col}" font-size="9" font-family="JetBrains Mono">${y}</text>`;
+  });
+
+  // Current year — solid gold, bold
+  if(cumulative[currentYear]) {
+    const pts=[];
+    for(let d=0; d<=currentDoy; d+=1){
+      const v=cumulative[currentYear][d]; if(v===undefined) continue;
+      pts.push(`${xS(d)},${yS(v)}`);
+    }
+    if(pts.length>1) svg+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${C.annual}" stroke-width="2.5"/>`;
+    // Current year label
+    const curV=cumulative[currentYear][currentDoy]||0;
+    svg+=`<text x="${W-PR+4}" y="${yS(curV)+4}" fill="${C.annual}" font-size="10" font-weight="600" font-family="JetBrains Mono">${currentYear}</text>`;
+  }
+
+  // Forecast dashed line from today to year end
+  const todayV = cumulative[currentYear]?.[currentDoy]||0;
+  const lastDoy = daysThisYear - 1;
+  svg+=`<line x1="${xS(currentDoy)}" y1="${yS(todayV)}" x2="${xS(lastDoy)}" y2="${yS(forecastTotal)}" stroke="${C.annual}" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.6"/>`;
+  svg+=`<circle cx="${xS(lastDoy)}" cy="${yS(forecastTotal)}" r="3" fill="${C.annual}" opacity="0.8"/>`;
+  svg+=`<text x="${W-PR+4}" y="${yS(forecastTotal)+4}" fill="${C.annual}" font-size="9" font-family="JetBrains Mono">~${f$(forecastTotal)}</text>`;
+
+  // Today vertical line
+  svg+=`<line x1="${xS(currentDoy)}" y1="${PT}" x2="${xS(currentDoy)}" y2="${PT+IH}" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="3,3"/>`;
+
+  svg+=`</svg>`;
+
+  // Legend
+  const legItems = [
+    `<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C.annual};height:2.5px"></div><strong style="color:var(--text)">${currentYear} (actual)</strong></div>`,
+    `<div class="trend-leg-item"><div class="trend-leg-line" style="background:${C.annual};opacity:0.6;border-top:2px dashed ${C.annual};height:0"></div><span>${currentYear} forecast</span></div>`,
+    ...priorYears.map((y,i)=>`<div class="trend-leg-item"><div class="trend-leg-line" style="background:${priorColors[i]}"></div>${y}</div>`)
+  ].join('');
+
+  el.innerHTML = kpiHtml + `
+    <div class="panel">
+      <div class="panel-hd">
+        <div class="panel-title">Cumulative Revenue — <span>Year over Year</span></div>
+        <div class="panel-meta">Dashed line = forecast based on trailing 12mo daily rate</div>
+      </div>
+      <div class="trend-wrap">
+        ${svg}
+        <div class="trend-leg">${legItems}</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title">Forecast Methodology</div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="dcf-item">
+            <div class="dcf-lbl">Method</div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text);margin-top:4px">Trailing 12mo daily rate</div>
+            <div class="dcf-sub">Total T12 revenue ÷ 365 days × remaining days in year</div>
+          </div>
+          <div class="dcf-item">
+            <div class="dcf-lbl">Daily Revenue Rate</div>
+            <div class="dcf-val">${f$(Math.round(dailyRate*100)/100)}</div>
+            <div class="dcf-sub">avg per day, trailing 12 months</div>
+          </div>
+          <div class="dcf-item">
+            <div class="dcf-lbl">Days Remaining in ${currentYear}</div>
+            <div class="dcf-val">${fN(remainingDays)}</div>
+            <div class="dcf-sub">as of ${ds(now)}</div>
+          </div>
+          <div class="dcf-item">
+            <div class="dcf-lbl">Projected Additional</div>
+            <div class="dcf-val">${f$(Math.round(forecastRemaining))}</div>
+            <div class="dcf-sub">= ${fN(remainingDays)}d × ${f$(Math.round(dailyRate*100)/100)}/day</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+// MAP
+// ════════════════════════════════════════════════
+function initMap() {
+  if(leafMap) return;
+  leafMap = _L.map('subscriber-map', {center:[39.5,-98.35], zoom:4});
+  _L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains:'abcd', maxZoom:19
+  }).addTo(leafMap);
+  leafMap.on('zoomend moveend', renderClusters);
+  setTimeout(() => { leafMap.invalidateSize(); renderMapMarkers(); }, 150);
+}
+
+function clusterPoints(points, map, radius) {
+  const clusters = [];
+  const used = new Uint8Array(points.length);
+  for (let i = 0; i < points.length; i++) {
+    if (used[i]) continue;
+    const px = map.latLngToContainerPoint([points[i].lat, points[i].lng]);
+    const cluster = { points:[points[i]], px };
+    used[i] = 1;
+    for (let j = i+1; j < points.length; j++) {
+      if (used[j]) continue;
+      const pj = map.latLngToContainerPoint([points[j].lat, points[j].lng]);
+      const dx = px.x - pj.x, dy = px.y - pj.y;
+      if (dx*dx + dy*dy < radius*radius) { cluster.points.push(points[j]); used[j] = 1; }
+    }
+    cluster.lat = cluster.points.reduce((s,p)=>s+p.lat,0)/cluster.points.length;
+    cluster.lng = cluster.points.reduce((s,p)=>s+p.lng,0)/cluster.points.length;
+    clusters.push(cluster);
+  }
+  return clusters;
+}
+
+function donutSvg(points) {
+  const counts = {monthly:0,annual:0,corporate:0,free:0,canceled:0,other:0};
+  points.forEach(p => { counts[p.subType] = (counts[p.subType]||0)+1; });
+  const total = points.length;
+  const size  = total < 5 ? 32 : total < 20 ? 40 : total < 100 ? 48 : 56;
+  const r = size/2;
+  const slices = [
+    {key:'monthly',color:C.monthly},{key:'annual',color:C.annual},{key:'corporate',color:C.corporate},
+    {key:'free',color:C.free},{key:'canceled',color:'#555'},{key:'other',color:C.other},
+  ].map(s=>({...s,count:counts[s.key]||0})).filter(s=>s.count>0);
+  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+  if (slices.length === 1) {
+    svg += `<circle cx="${r}" cy="${r}" r="${r-1}" fill="${slices[0].color}" opacity="0.9"/>`;
+  } else {
+    let sa = -Math.PI/2;
+    slices.forEach(s => {
+      const a = (s.count/total)*2*Math.PI, ea = sa+a;
+      const x1=r+(r-1)*Math.cos(sa), y1=r+(r-1)*Math.sin(sa);
+      const x2=r+(r-1)*Math.cos(ea), y2=r+(r-1)*Math.sin(ea);
+      svg += `<path d="M${r},${r} L${x1},${y1} A${r-1},${r-1} 0 ${a>Math.PI?1:0},1 ${x2},${y2} Z" fill="${s.color}" opacity="0.9"/>`;
+      sa = ea;
+    });
+  }
+  svg += `<circle cx="${r}" cy="${r}" r="${r*0.5}" fill="#0d0d14"/>`;
+  svg += `<text x="${r}" y="${r}" text-anchor="middle" dominant-baseline="central" fill="#c8c0cc" font-family="JetBrains Mono,monospace" font-weight="700" font-size="${size<40?9:11}">${total}</text>`;
+  svg += `</svg>`;
+  return {svg, size};
+}
+
+function renderClusters() {
+  if(!leafMap || !_mapPoints.length) return;
+  if(mapCluster) { mapCluster.forEach(m=>leafMap.removeLayer(m)); mapCluster=[]; }
+  const zoom = leafMap.getZoom();
+  const radius = zoom < 5 ? 60 : zoom < 7 ? 45 : zoom < 9 ? 30 : zoom < 11 ? 20 : 0;
+  if (radius === 0) {
+    _mapPoints.forEach(p => {
+      const color = p.subType==='canceled' ? '#555' : (C[p.subType]||C.other);
+      const icon = _L.divIcon({html:`<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="4" fill="${color}" opacity="0.9" stroke="#000" stroke-width="1"/></svg>`,className:'',iconSize:[10,10],iconAnchor:[5,5],popupAnchor:[0,-7]});
+      const m = _L.marker([p.lat,p.lng], {icon}).bindPopup(p.popup, {maxWidth:260,minWidth:200});
+      leafMap.addLayer(m); mapCluster.push(m);
+    });
+  } else {
+    const clusters = clusterPoints(_mapPoints, leafMap, radius);
+    clusters.forEach(cl => {
+      if (cl.points.length === 1) {
+        const p = cl.points[0];
+        const color = p.subType==='canceled' ? '#555' : (C[p.subType]||C.other);
+        const icon = _L.divIcon({html:`<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="4" fill="${color}" opacity="0.9" stroke="#000" stroke-width="1"/></svg>`,className:'',iconSize:[10,10],iconAnchor:[5,5],popupAnchor:[0,-7]});
+        const m = _L.marker([p.lat,p.lng], {icon}).bindPopup(p.popup, {maxWidth:260,minWidth:200});
+        leafMap.addLayer(m); mapCluster.push(m);
+      } else {
+        const {svg, size} = donutSvg(cl.points);
+        const icon = _L.divIcon({html:svg, className:'', iconSize:[size,size], iconAnchor:[size/2,size/2]});
+        const m = _L.marker([cl.lat,cl.lng], {icon});
+        m.on('click', () => leafMap.setView([cl.lat,cl.lng], leafMap.getZoom()+2));
+        leafMap.addLayer(m); mapCluster.push(m);
+      }
+    });
+  }
+}
+
+function renderMapMarkers() {
+  if(!leafMap) return;
+  const shown = allSubs.filter(s => {
+    if(!s.lat||!s.lng) return false;
+    if(mapFilter==='canceled') return s.status==='canceled';
+    if(mapFilter==='all')      return s.status==='active';
+    return s.status==='active' && s.type===mapFilter;
+  });
+  _mapPoints = shown.map(s => {
+    const isCanceled = s.status==='canceled';
+    const color = isCanceled ? '#888' : (C[s.type]||C.other);
+    const cancelDate = s.canceled_at ? ds(new Date(s.canceled_at*1000)) : '—';
+    const popup = `<div class="map-pop">
+      <div class="map-pop-type" style="color:${color}">${LBL[s.type]||s.type}${isCanceled?' · Lapsed':''}</div>
+      <div class="map-pop-row"><span>Plan</span><span>${esc(s.plan_name||s.interval||'—')}</span></div>
+      <div class="map-pop-row"><span>Amount</span><span style="color:var(--gold)">${f$(s.amount)}</span></div>
+      <div class="map-pop-row"><span>State</span><span>${esc(s.state||'—')}</span></div>
+      ${isCanceled?`<div class="map-pop-row"><span>Tenure</span><span>${s.tenure_days!=null?s.tenure_days+'d':'—'}</span></div>
+      <div class="map-pop-row"><span>Canceled</span><span>${cancelDate}</span></div>`:''}
+      <div class="map-pop-row"><span>ID</span><span style="color:var(--text-dim);font-size:9px">${esc(s.customer_id||'—')}</span></div>
+    </div>`;
+    return { lat:s.lat, lng:s.lng, subType: isCanceled?'canceled':(s.type||'other'), popup };
+  });
+  const el = document.getElementById('map-status');
+  if(el) el.textContent=`${fN(shown.length)} subscriber${shown.length!==1?'s':''} mapped`;
+  renderClusters();
+  if(_mapPoints.length > 1 && !leafMap._hasFit) {
+    leafMap._hasFit = true;
+    setTimeout(() => {
+      try { const bounds = _L.latLngBounds(_mapPoints.map(p=>[p.lat,p.lng])); leafMap.fitBounds(bounds.pad(0.05), {maxZoom:10}); } catch(e){}
+    }, 200);
+  }
+}
+
+function setMapFilter(f){
+  mapFilter=f;
+  ['all','monthly','annual','corporate','free','canceled'].forEach(t=>{
+    const el=document.getElementById(`mf-${t}`); if(el) el.classList.toggle('on',t===f);
+  });
+  if(!leafMap) return; // map not yet initialized — filter will apply on initMap
+  leafMap._hasFit=false;
+  renderMapMarkers();
+}
+
+// ════════════════════════════════════════════════
+// SHARED HELPERS
+// ════════════════════════════════════════════════
+function f$(n){n=Number(n)||0;if(n>=1000000)return'$'+(n/1000000).toFixed(2)+'M';if(n>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+n.toFixed(0);}
+function fN(n){return Number(n||0).toLocaleString();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dlt(a,b){if(!b)return'';const d=Math.round(((a-b)/b)*100),cls=d>=0?'up':'dn',sign=d>=0?'▲':'▼';return`<div class="kpi-delta ${cls}">${sign} ${Math.abs(d)}% vs prior</div>`;}
+
+function legend(data,total,isMoney){
+  return Object.entries(data).map(([k,v])=>{if(!v)return'';
+    const pct=total>0?Math.round(v/total*100):0;
+    return`<div class="leg-item"><div class="leg-dot" style="background:${C[k]||'#888'}"></div><span class="leg-label">${LBL[k]||k}</span><span class="leg-val">${isMoney?f$(v):fN(v)}</span><span class="leg-pct">${pct}%</span></div>`;
   }).join('');
 }
 
-// ═══ SUMMARIES ARCHIVE ═══
-function renderSummariesTab(){
-  const el=document.getElementById('summariesList');
-  const s=D.summaries||{};const all=[];
-  (s.daily||[]).forEach(d=>all.push({...d,type:'daily',sort:d.date}));
-  (s.weekly||[]).forEach(d=>all.push({...d,type:'weekly',sort:d.date}));
-  (s.monthly||[]).forEach(d=>all.push({...d,type:'monthly',sort:d.date}));
-  all.sort((a,b)=>b.sort.localeCompare(a.sort));
-  if(!all.length){el.innerHTML='<div class="empty-state"><p>AI summaries will appear once the Claude API is configured.</p></div>';return;}
-  el.innerHTML=all.map(s=>{const tl={daily:'Daily',weekly:'Weekly',monthly:'Monthly'}[s.type];
-    const title=s.type==='daily'?s.date:s.type==='weekly'?'Week of '+(s.week_start||s.date):s.month||s.date;
-    return'<div class="summary-entry"><h4><span class="se-type '+s.type+'">'+tl+'</span> '+esc(title)+'</h4><div class="se-body ai-body">'+formatSummary(s.text)+'</div></div>';}).join('');
+function donut(id,data){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+  const r=Math.min(W,H)/2-3,inner=r*.55;
+  ctx.clearRect(0,0,W,H);
+  const entries=Object.entries(data).filter(([,v])=>v>0);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  if(!total){ctx.fillStyle='rgba(255,255,255,0.05)';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#0d0d14';ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fill();return;}
+  let a=-Math.PI/2;
+  entries.forEach(([k,v])=>{const sl=(v/total)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+sl);ctx.closePath();ctx.fillStyle=C[k]||'#888';ctx.fill();a+=sl;});
+  ctx.fillStyle='#0d0d14';ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c8c0cc';ctx.font='bold 12px JetBrains Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(total<10000?fN(Math.round(total)):f$(total),cx,cy);
 }
 
-// ═══ DETAIL PANEL ═══
-function openDetail(id){
-  const m=mentions.find(x=>x.id===id);if(!m)return;
-  document.getElementById('dTitle').textContent=m.title;
-  document.getElementById('dSource').textContent=m.source;
-  document.getElementById('dDomain').textContent=m.source_domain;
-  document.getElementById('dDate').textContent=fmtDate(m.published);
-  document.getElementById('dSentiment').textContent=m.sentiment||'untagged';
-  const vl={google_news_rss:'Google News RSS',wordpress_api:'WordPress API',reddit_rss:'Reddit RSS',medium_rss:'Medium RSS'};
-  document.getElementById('dVia').textContent=vl[m.found_via]||m.found_via;
-  document.getElementById('dSeen').textContent=fmtDate(m.first_seen);
-  document.getElementById('dSnippet').innerHTML=m.snippet?hlBD(m.snippet):'<em style="color:#555">No snippet available</em>';
-  document.getElementById('dLink').href=m.url;
-  document.getElementById('detailOverlay').classList.add('open');
-  document.getElementById('detailPanel').classList.add('open');
+// ════════════════════════════════════════════════
+// UI WIRING
+// ════════════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('on',p.id===`tab-${tab}`));
+  if(tab==='map') setTimeout(()=>{initMap();leafMap&&leafMap.invalidateSize();},150);
 }
-function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');document.getElementById('detailPanel').classList.remove('open');}
-document.getElementById('tableBody').addEventListener('click',e=>{const tr=e.target.closest('tr[data-id]');if(tr)openDetail(tr.dataset.id);});
-document.getElementById('detailOverlay').addEventListener('click',closeDetail);
-document.getElementById('detailClose').addEventListener('click',closeDetail);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
 
-// ═══ UTILS ═══
-function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-function fmtShort(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-function hlBD(t){if(!t)return'';return esc(t).replace(/(businessden)/gi,'<mark>$1</mark>');}
-function trunc(s,n){if(!s)return'';return s.length>n?s.slice(0,n)+'…':s;}
+document.querySelectorAll('#period-btns .seg').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#period-btns .seg').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); period=btn.dataset.p;
+  document.getElementById('custom-range').style.display=period==='custom'?'flex':'none';
+}));
+document.querySelectorAll('#type-btns .seg').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#type-btns .seg').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); subType=btn.dataset.t;
+}));
+document.querySelectorAll('#cmp-period-btns .seg').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#cmp-period-btns .seg').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); cmpPeriod=btn.dataset.cp;
+  document.getElementById('custom-range-c').style.display=cmpPeriod==='custom_c'?'flex':'none';
+}));
+
+function toggleCmp(){
+  cmpEnabled=!cmpEnabled;
+  document.getElementById('cmp-tog').classList.toggle('on',cmpEnabled);
+  document.getElementById('cmp-bar').style.display=cmpEnabled?'flex':'none';
+}
+function setLoading(on){
+  document.getElementById('loading-bar').classList.toggle('active',on);
+  const b=document.getElementById('apply-btn');b.disabled=on;b.textContent=on?'Loading...':'Apply';
+}
+function notice(msg){const b=document.getElementById('notice-bar');b.textContent=msg;b.style.display=msg?'block':'none';}
 
 init();
 </script>
