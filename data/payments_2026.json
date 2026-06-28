@@ -1,8 +1,308 @@
 {
-  "generated_at": "2026-06-27T10:46:45.855973+00:00",
+  "generated_at": "2026-06-28T10:51:46.006876+00:00",
   "year": "2026",
-  "count": 7830,
+  "count": 7860,
   "payments": [
+    {
+      "charge_id": "ch_3TnENoCd8b2AMTwT0TGjhV1s",
+      "customer_id": "cus_IeZZhdYCXgnZTo",
+      "amount": 12.5,
+      "date": "2026-06-28",
+      "timestamp": 1782636490,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TnDRECd8b2AMTwTUGZkXiAR"
+    },
+    {
+      "charge_id": "ch_3TnEEkCd8b2AMTwT1p9OMZpe",
+      "customer_id": "cus_TJkzKKdGjqOihR",
+      "amount": 35.0,
+      "date": "2026-06-28",
+      "timestamp": 1782635929,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TnDHzCd8b2AMTwTJDSxKVS1"
+    },
+    {
+      "charge_id": "ch_3TnCLKCd8b2AMTwT00OdZurG",
+      "customer_id": "cus_SOPT0cTsSJQc6r",
+      "amount": 35.0,
+      "date": "2026-06-28",
+      "timestamp": 1782628648,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TnBOpCd8b2AMTwTTOWnq5Oz"
+    },
+    {
+      "charge_id": "ch_3TnAgfCd8b2AMTwT1AbOlNlR",
+      "customer_id": "cus_Qk772mJIcnNkz3",
+      "amount": 35.0,
+      "date": "2026-06-28",
+      "timestamp": 1782622285,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn9k1Cd8b2AMTwTLSRoRqRt"
+    },
+    {
+      "charge_id": "ch_3Tn5oUCd8b2AMTwT0PHSo8cd",
+      "customer_id": "cus_KUJNcs53htilqO",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782603548,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn4rbCd8b2AMTwTc9Ub58Oi"
+    },
+    {
+      "charge_id": "ch_3Tn4qKCd8b2AMTwT13iqUczL",
+      "customer_id": "cus_Ipy18AmKGcNBfF",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782599818,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn3tOCd8b2AMTwT79EEnlW0"
+    },
+    {
+      "charge_id": "ch_3Tn3orCd8b2AMTwT1rTVu0Jb",
+      "customer_id": "cus_IT9sztFp5sZork",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782595883,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn2sOCd8b2AMTwTmzC1Pm2i"
+    },
+    {
+      "charge_id": "ch_3Tn3nBCd8b2AMTwT0SJvlreB",
+      "customer_id": "cus_IT9rIFmbamnbA4",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782595779,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn2qKCd8b2AMTwT4mUXY516"
+    },
+    {
+      "charge_id": "ch_3Tn3b7Cd8b2AMTwT1YHrMiJ1",
+      "customer_id": "cus_JNik7KFqzS5EQh",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782595032,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn2dxCd8b2AMTwTf0mMb7G5"
+    },
+    {
+      "charge_id": "ch_3Tn39wCd8b2AMTwT0l7sEvXV",
+      "customer_id": "cus_K7Pr8VKLIfZs6e",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782593346,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn2CzCd8b2AMTwTAsdcMBEI"
+    },
+    {
+      "charge_id": "ch_3Tn1lSCd8b2AMTwT0wTlXoe6",
+      "customer_id": "cus_ISMBUHAR3qOpGr",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782587985,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn0oXCd8b2AMTwTo8lc4Zvd"
+    },
+    {
+      "charge_id": "ch_3Tn1j1Cd8b2AMTwT15r9vLQl",
+      "customer_id": "cus_IpyVxlfBfdNe1i",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782587834,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn0lnCd8b2AMTwTFNU6goER"
+    },
+    {
+      "charge_id": "py_3Tn1bZCd8b2AMTwT0zxN2LW9",
+      "customer_id": "cus_IpyLrteFAOFQ36",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782587374,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tn0eeCd8b2AMTwTvIeLFt6C"
+    },
+    {
+      "charge_id": "ch_3Tn0uPCd8b2AMTwT0hKhjiCO",
+      "customer_id": "cus_LxGA7efiVlYugZ",
+      "amount": 165.0,
+      "date": "2026-06-27",
+      "timestamp": 1782584696,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmzxRCd8b2AMTwTiz59KTN3"
+    },
+    {
+      "charge_id": "ch_3Tn0pWCd8b2AMTwT19abfj8m",
+      "customer_id": "cus_TJX8rSoYyqvYc5",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782584393,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmzsmCd8b2AMTwTCL5kGUpK"
+    },
+    {
+      "charge_id": "ch_3Tn0ICCd8b2AMTwT1ROmfVvS",
+      "customer_id": "cus_M8UKSgopWeU9eg",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782582327,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmzLeCd8b2AMTwTsApfIOsn"
+    },
+    {
+      "charge_id": "ch_3Tmzn7Cd8b2AMTwT0uWSQgsQ",
+      "customer_id": "cus_SOCWU8jtVtqrse",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782580400,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmyqmCd8b2AMTwTdD7xyfuG"
+    },
+    {
+      "charge_id": "ch_3Tmzd7Cd8b2AMTwT12cpOfr1",
+      "customer_id": "cus_IpwKw6EKhUnqc1",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782579779,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmygnCd8b2AMTwTdZYJhsHX"
+    },
+    {
+      "charge_id": "ch_3TmzJJCd8b2AMTwT0zWj7p0b",
+      "customer_id": "cus_SOC0XAWeyP9lho",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782578551,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmyMOCd8b2AMTwTFUy15lB1"
+    },
+    {
+      "charge_id": "ch_3TmzHLCd8b2AMTwT1X4HbKOb",
+      "customer_id": "cus_O9xvR0Lgx1jp6J",
+      "amount": 165.0,
+      "date": "2026-06-27",
+      "timestamp": 1782578429,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmyKZCd8b2AMTwTYYrOvABf"
+    },
+    {
+      "charge_id": "ch_3TmzHKCd8b2AMTwT0QIFuyfd",
+      "customer_id": "cus_IT5BBaZxvT9T81",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782578429,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmyKGCd8b2AMTwT4jSDNVxg"
+    },
+    {
+      "charge_id": "py_3TmyyyCd8b2AMTwT06ul9oQw",
+      "customer_id": "cus_IT4tuJAf7cT3qK",
+      "amount": 12.5,
+      "date": "2026-06-27",
+      "timestamp": 1782577293,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tmy2dCd8b2AMTwTkNax0BTh"
+    },
+    {
+      "charge_id": "ch_3TmyyjCd8b2AMTwT0hRsnLdI",
+      "customer_id": "cus_LI27rkFdPo1uII",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782577276,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tmy2CCd8b2AMTwTNh9YmVZO"
+    },
+    {
+      "charge_id": "ch_3Tmy72Cd8b2AMTwT07AcRlrE",
+      "customer_id": "cus_O9wiZusashn1lZ",
+      "amount": 165.0,
+      "date": "2026-06-27",
+      "timestamp": 1782573950,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmxAZCd8b2AMTwTtnuALFBU"
+    },
+    {
+      "charge_id": "ch_3Tmy6rCd8b2AMTwT0THj0Mc4",
+      "customer_id": "cus_NQzbvoh8ifNDez",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782573936,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmxAKCd8b2AMTwTsW9eghlN"
+    },
+    {
+      "charge_id": "ch_3TmxlmCd8b2AMTwT0CjMcFqZ",
+      "customer_id": "cus_RfDKIHTBZijWSq",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782572628,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tmwp5Cd8b2AMTwTGLpPxQgY"
+    },
+    {
+      "charge_id": "ch_3TmxbGCd8b2AMTwT0zRxjJQS",
+      "customer_id": "cus_QvVa7Y73v5ozg1",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782571976,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tmwe0Cd8b2AMTwTLUoOu0vr"
+    },
+    {
+      "charge_id": "ch_3TmxZLCd8b2AMTwT1L4CxZAQ",
+      "customer_id": "cus_LxCjh1qmWLlWCK",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782571858,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmwcCCd8b2AMTwTVJE3ewzs"
+    },
+    {
+      "charge_id": "ch_3TmxC9Cd8b2AMTwT1r7soHk8",
+      "customer_id": "cus_UatGxxKinuvmLM",
+      "amount": 35.0,
+      "date": "2026-06-27",
+      "timestamp": 1782570420,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmwFjCd8b2AMTwTTQnZTOel"
+    },
+    {
+      "charge_id": "ch_3TmwQnCd8b2AMTwT13wFhBgV",
+      "customer_id": "cus_LlZYARWbyRKDVR",
+      "amount": 15.0,
+      "date": "2026-06-27",
+      "timestamp": 1782567483,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TmvTuCd8b2AMTwTfZwu8BOL"
+    },
     {
       "charge_id": "ch_3TmlaACd8b2AMTwT1A7yXENm",
       "customer_id": "cus_SZZpH338ZSz3AU",
