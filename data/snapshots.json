@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-16T10:45:45.374924+00:00",
+  "generated_at": "2026-07-17T10:39:17.395184+00:00",
   "snapshots": [
     {
       "date": "2020-08-24",
@@ -37726,6 +37726,24 @@
       "canceled_30d": 89,
       "avg_tenure_monthly": 376.8,
       "avg_tenure_annual": 609.7,
+      "avg_tenure_corporate": null,
+      "avg_tenure_free": 36.7
+    },
+    {
+      "date": "2026-07-17",
+      "timestamp": 1784284556,
+      "active_total": 4201,
+      "active_monthly": 1051,
+      "active_annual": 3015,
+      "active_corporate": 0,
+      "active_free": 135,
+      "active_other": 0,
+      "mrr": 61264.0,
+      "arr": 735168.0,
+      "new_30d": 95,
+      "canceled_30d": 91,
+      "avg_tenure_monthly": 376.7,
+      "avg_tenure_annual": 609.6,
       "avg_tenure_corporate": null,
       "avg_tenure_free": 36.7
     }
