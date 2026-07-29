@@ -1,8 +1,408 @@
 {
-  "generated_at": "2026-07-28T10:55:30.540463+00:00",
+  "generated_at": "2026-07-29T10:59:33.022293+00:00",
   "year": "2026",
-  "count": 9065,
+  "count": 9105,
   "payments": [
+    {
+      "charge_id": "ch_3TyOfmCd8b2AMTwT1Mp1FWR0",
+      "customer_id": "cus_UyLMEN9W8aQu5y",
+      "amount": 135.0,
+      "date": "2026-07-29",
+      "timestamp": 1785297652,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyOflCd8b2AMTwTH9ZXT6NY"
+    },
+    {
+      "charge_id": "ch_3TyNtwCd8b2AMTwT0OlEGOwh",
+      "customer_id": "cus_JwIDgTtzqWROFF",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785294687,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyNt4Cd8b2AMTwT9AC7iRzz"
+    },
+    {
+      "charge_id": "ch_3TyNsxCd8b2AMTwT0NJlTI10",
+      "customer_id": "cus_M91cM3Llkh4UfM",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785294626,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyNrqCd8b2AMTwTQUUgTaRX"
+    },
+    {
+      "charge_id": "ch_3TyMwLCd8b2AMTwT1D2dPg0w",
+      "customer_id": "cus_RvJFn29yLXD18B",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785290991,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyMvhCd8b2AMTwTk1XnJUTw"
+    },
+    {
+      "charge_id": "ch_3TyMUvCd8b2AMTwT1iJdrT88",
+      "customer_id": "cus_NFvjFXmvPzX8kZ",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785289291,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyMTtCd8b2AMTwT7gOirOx7"
+    },
+    {
+      "charge_id": "ch_3TyMQeCd8b2AMTwT1xsWrlU8",
+      "customer_id": "cus_L3CEFKsyKr4Bvk",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785289027,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyMPWCd8b2AMTwTHQQZzN0W"
+    },
+    {
+      "charge_id": "ch_3TyMMwCd8b2AMTwT128pMOVz",
+      "customer_id": "cus_OixS1rmCe0lbTi",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785288797,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyMLYCd8b2AMTwT54sN0lct"
+    },
+    {
+      "charge_id": "ch_3TyMFcCd8b2AMTwT1rmOLrMA",
+      "customer_id": "cus_ITbn2KiqaepPcv",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785288343,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyMEWCd8b2AMTwTOIiU9IrH"
+    },
+    {
+      "charge_id": "ch_3TyM1uCd8b2AMTwT04JLgXCM",
+      "customer_id": "cus_IeqO5Cjfd8UxqZ",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785287493,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyM0mCd8b2AMTwTXyfUIIDn"
+    },
+    {
+      "charge_id": "ch_3TyJYZCd8b2AMTwT0S4Sx0Kf",
+      "customer_id": "cus_QBwR9NRzdiJ4yS",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785277985,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyJX6Cd8b2AMTwTUlDamQwq"
+    },
+    {
+      "charge_id": "ch_3TyJV2Cd8b2AMTwT0mLUSBZC",
+      "customer_id": "cus_QYn9hayWhf9EiQ",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785277767,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyJUHCd8b2AMTwTDTAi0V0A"
+    },
+    {
+      "charge_id": "ch_3TyJCzCd8b2AMTwT0rOAS696",
+      "customer_id": "cus_JwDNm1K1jiopbU",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785276647,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyJC3Cd8b2AMTwT3aAGhK6H"
+    },
+    {
+      "charge_id": "ch_3TyIl0Cd8b2AMTwT1eANiegK",
+      "customer_id": "cus_OXHkbF9GXtFBjn",
+      "amount": 15.0,
+      "date": "2026-07-28",
+      "timestamp": 1785274912,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyIkBCd8b2AMTwTN4pmloGi"
+    },
+    {
+      "charge_id": "ch_3TyIVSCd8b2AMTwT0QUUgIFd",
+      "customer_id": "cus_MWA3NuvVc557tL",
+      "amount": 15.0,
+      "date": "2026-07-28",
+      "timestamp": 1785273949,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyITsCd8b2AMTwTn4r0CEVM"
+    },
+    {
+      "charge_id": "ch_3TyHikCd8b2AMTwT15kJrnLR",
+      "customer_id": "cus_UyEBVY9lj0O5H0",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785270928,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership 35",
+      "invoice_id": "in_1TyHijCd8b2AMTwTVvavgi5I"
+    },
+    {
+      "charge_id": "ch_3TyGunCd8b2AMTwT0rrPNtCB",
+      "customer_id": "cus_JwAzqN0mSeIGFk",
+      "amount": 360.0,
+      "date": "2026-07-28",
+      "timestamp": 1785267832,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyGu2Cd8b2AMTwT7NfJFwaW"
+    },
+    {
+      "charge_id": "ch_3TyGBPCd8b2AMTwT08cp3i9l",
+      "customer_id": "cus_IekLDf15q7NkLN",
+      "amount": 12.5,
+      "date": "2026-07-28",
+      "timestamp": 1785265018,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyGAGCd8b2AMTwTQShHtjnE"
+    },
+    {
+      "charge_id": "ch_3TyFrFCd8b2AMTwT1KKFqFkx",
+      "customer_id": "cus_UyCFShWDAPALlH",
+      "amount": 135.0,
+      "date": "2026-07-28",
+      "timestamp": 1785263769,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyFrFCd8b2AMTwT07lVlbgS"
+    },
+    {
+      "charge_id": "ch_3TyFeQCd8b2AMTwT1mSSHwPL",
+      "customer_id": "cus_UyC2pKDbM9uu1h",
+      "amount": 135.0,
+      "date": "2026-07-28",
+      "timestamp": 1785262973,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyFeQCd8b2AMTwT49Q6KIeH"
+    },
+    {
+      "charge_id": "ch_3TyF5BCd8b2AMTwT1UIKhCZS",
+      "customer_id": "cus_UyBSbitrqT4gFa",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785260788,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership 35",
+      "invoice_id": "in_1TyF5ACd8b2AMTwTmbMwLPQK"
+    },
+    {
+      "charge_id": "ch_3TyEaMCd8b2AMTwT0HjuVhTJ",
+      "customer_id": "cus_IT7lgJM78nimCt",
+      "amount": 12.5,
+      "date": "2026-07-28",
+      "timestamp": 1785258877,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyEZaCd8b2AMTwTC9woA6OH"
+    },
+    {
+      "charge_id": "ch_3TyEVHCd8b2AMTwT0q5aX16c",
+      "customer_id": "cus_Jw8VHNGYINAdFo",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785258561,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyEUPCd8b2AMTwTC36BAccu"
+    },
+    {
+      "charge_id": "ch_3TyENECd8b2AMTwT1wt6gxok",
+      "customer_id": "cus_OLbCoNyQx3cwgZ",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785258063,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyELWCd8b2AMTwTLRGnLEwx"
+    },
+    {
+      "charge_id": "ch_3TyEDNCd8b2AMTwT03jaUaIe",
+      "customer_id": "cus_KP2Do69HTam9ML",
+      "amount": 150.0,
+      "date": "2026-07-28",
+      "timestamp": 1785257451,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyEBlCd8b2AMTwTH5vQ43P3"
+    },
+    {
+      "charge_id": "ch_3TyDsWCd8b2AMTwT0p7RHVQL",
+      "customer_id": "cus_M8rGZcrPaLXD7x",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785256159,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyDquCd8b2AMTwTW24lCtqk"
+    },
+    {
+      "charge_id": "ch_3TyDYLCd8b2AMTwT1kHnjZm7",
+      "customer_id": "cus_IPVDAlCsxVPddt",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785254908,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyDX6Cd8b2AMTwTDDleBSpd"
+    },
+    {
+      "charge_id": "ch_3TyDFnCd8b2AMTwT05c1ugxs",
+      "customer_id": "cus_NbsVJXcfA92t9W",
+      "amount": 15.0,
+      "date": "2026-07-28",
+      "timestamp": 1785253758,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyDEkCd8b2AMTwTjT5zhbrE"
+    },
+    {
+      "charge_id": "ch_3TyDD4Cd8b2AMTwT01OGffBq",
+      "customer_id": "cus_SlQ4FPlFRKuDYl",
+      "amount": 150.0,
+      "date": "2026-07-28",
+      "timestamp": 1785253589,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyDBVCd8b2AMTwTHVbsB3K9"
+    },
+    {
+      "charge_id": "ch_3TyD06Cd8b2AMTwT1DS5oDQ8",
+      "customer_id": "cus_Uy9IKgrC3SLKtp",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785252784,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership 35",
+      "invoice_id": "in_1TyD05Cd8b2AMTwTAt3h8Mte"
+    },
+    {
+      "charge_id": "ch_3TyCZTCd8b2AMTwT13luymfR",
+      "customer_id": "cus_Uy8rVKaxbljM3i",
+      "amount": 135.0,
+      "date": "2026-07-28",
+      "timestamp": 1785251134,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyCZTCd8b2AMTwTsJqzfI8N"
+    },
+    {
+      "charge_id": "ch_3TyCQoCd8b2AMTwT1WAKMCPI",
+      "customer_id": "cus_OLZC6pkJHP5lON",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785250596,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyCQ3Cd8b2AMTwT1FNWtu8m"
+    },
+    {
+      "charge_id": "ch_3TyCLZCd8b2AMTwT0ii5ITQM",
+      "customer_id": "cus_QNQyQhSNmOupxw",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785250276,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyCKTCd8b2AMTwTJBswzxn6"
+    },
+    {
+      "charge_id": "ch_3TyC1RCd8b2AMTwT1d0OLe52",
+      "customer_id": "cus_Uy8Ik8UiAnq9uU",
+      "amount": 135.0,
+      "date": "2026-07-28",
+      "timestamp": 1785249023,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyC1QCd8b2AMTwT0uYWN0qv"
+    },
+    {
+      "charge_id": "ch_3TyBxVCd8b2AMTwT11HFTn8M",
+      "customer_id": "cus_SlOmmmeY9iUXOv",
+      "amount": 150.0,
+      "date": "2026-07-28",
+      "timestamp": 1785248780,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyBwaCd8b2AMTwTbL6t2Wvt"
+    },
+    {
+      "charge_id": "ch_3TyBY7Cd8b2AMTwT0fUVYYlt",
+      "customer_id": "cus_Jw5R1KEsylGCHg",
+      "amount": 165.0,
+      "date": "2026-07-28",
+      "timestamp": 1785247206,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyBWkCd8b2AMTwTTD4kjhHM"
+    },
+    {
+      "charge_id": "ch_3TyBWmCd8b2AMTwT0BHhap49",
+      "customer_id": "cus_LvKB08c33FjjQ7",
+      "amount": 15.0,
+      "date": "2026-07-28",
+      "timestamp": 1785247123,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyBW2Cd8b2AMTwT1shN9uBe"
+    },
+    {
+      "charge_id": "ch_3TyBPcCd8b2AMTwT1Yu7C18R",
+      "customer_id": "cus_Uy7eqJFPCKuPsy",
+      "amount": 35.0,
+      "date": "2026-07-28",
+      "timestamp": 1785246679,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership 35",
+      "invoice_id": "in_1TyBPbCd8b2AMTwTEsAu3SQ6"
+    },
+    {
+      "charge_id": "ch_3TyBEfCd8b2AMTwT0iOWGMWQ",
+      "customer_id": "cus_Uy7Tn0bkhucdVb",
+      "amount": 135.0,
+      "date": "2026-07-28",
+      "timestamp": 1785245999,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyBEfCd8b2AMTwTvvpJ3OYq"
+    },
+    {
+      "charge_id": "ch_3TyArnCd8b2AMTwT1BhKnqsq",
+      "customer_id": "cus_JNzB6cTcUDbl5v",
+      "amount": 15.0,
+      "date": "2026-07-28",
+      "timestamp": 1785244582,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyAqvCd8b2AMTwTV0JTwFTy"
+    },
+    {
+      "charge_id": "ch_3TyA32Cd8b2AMTwT0V6CW6fS",
+      "customer_id": "cus_Jw3u4oeyo5cknP",
+      "amount": 150.0,
+      "date": "2026-07-28",
+      "timestamp": 1785241435,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyA1uCd8b2AMTwTTHu8T1Fh"
+    },
     {
       "charge_id": "ch_3Ty5khCd8b2AMTwT1tLZkftO",
       "customer_id": "cus_IeZZhdYCXgnZTo",
