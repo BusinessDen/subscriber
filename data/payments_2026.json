@@ -1,8 +1,558 @@
 {
-  "generated_at": "2026-07-29T10:59:33.022293+00:00",
+  "generated_at": "2026-07-30T10:49:40.333053+00:00",
   "year": "2026",
-  "count": 9105,
+  "count": 9160,
   "payments": [
+    {
+      "charge_id": "ch_3TynKGCd8b2AMTwT0AGWmgei",
+      "customer_id": "cus_UnW2yp6gmFmb3X",
+      "amount": 35.0,
+      "date": "2026-07-30",
+      "timestamp": 1785392418,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership",
+      "invoice_id": "in_1TynIrCd8b2AMTwTKerhT3YQ"
+    },
+    {
+      "charge_id": "py_3TymKsCd8b2AMTwT1UNmyXB0",
+      "customer_id": "cus_IZQfhTgpWDTbLk",
+      "amount": 95.0,
+      "date": "2026-07-30",
+      "timestamp": 1785388666,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyjqXCd8b2AMTwT12Hwf8P5",
+      "customer_id": "cus_TW2ZhAQY9YwtXu",
+      "amount": 35.0,
+      "date": "2026-07-30",
+      "timestamp": 1785379043,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyjozCd8b2AMTwTK0hqAqtX"
+    },
+    {
+      "charge_id": "py_3TyiBgCd8b2AMTwT08W32GPl",
+      "customer_id": "cus_S0cMEk76pI75YV",
+      "amount": 95.0,
+      "date": "2026-07-30",
+      "timestamp": 1785372679,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyhayCd8b2AMTwT0eawiGpK",
+      "customer_id": "cus_UyeukqPT2qsaXO",
+      "amount": 135.0,
+      "date": "2026-07-30",
+      "timestamp": 1785370390,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyhaxCd8b2AMTwTldU6OLuT"
+    },
+    {
+      "charge_id": "ch_3TygmsCd8b2AMTwT1ETOUnQV",
+      "customer_id": "cus_ITx4YyxvRDYN4P",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785367285,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyglwCd8b2AMTwTYS7zfs8v"
+    },
+    {
+      "charge_id": "ch_3TygQYCd8b2AMTwT17d73bAX",
+      "customer_id": "cus_IfBOSUhtWIsZbF",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785365901,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TygPhCd8b2AMTwTFExRVeGe"
+    },
+    {
+      "charge_id": "py_3TygFwCd8b2AMTwT1cmdCNL4",
+      "customer_id": "cus_UydWGvr4GsLnR1",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785365335,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TygEJCd8b2AMTwT0cjEqdik",
+      "customer_id": "cus_IQR6HfjqjIP45X",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785365167,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3Tyg8NCd8b2AMTwT0U3JDwuj",
+      "customer_id": "cus_QZAXQO0CXmUMyJ",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785364774,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tyg7YCd8b2AMTwT8kXuJM3t"
+    },
+    {
+      "charge_id": "ch_3Tyg4oCd8b2AMTwT0SbYOliW",
+      "customer_id": "cus_ITwKhIO4YxFgVJ",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785364552,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tyg49Cd8b2AMTwT70figTiI"
+    },
+    {
+      "charge_id": "py_3Tyg2NCd8b2AMTwT0Kg7KmU4",
+      "customer_id": "cus_IRaN45vb83fwT7",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785364481,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TyfCkCd8b2AMTwT1nUct4Cx",
+      "customer_id": "cus_UycRRau1BoP3eO",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785361401,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TyevBCd8b2AMTwT1EcRPi7w",
+      "customer_id": "cus_QCIjBZYRfQlHeA",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785360138,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TyelFCd8b2AMTwT10ozyFqM",
+      "customer_id": "cus_Uybz7Z7SkZlggj",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785359589,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyeamCd8b2AMTwT1dD4oTg1",
+      "customer_id": "cus_SP1a6Sv9xMlSxE",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785358846,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyeZvCd8b2AMTwTNkyg4bFe"
+    },
+    {
+      "charge_id": "ch_3TyeZECd8b2AMTwT0gqkccto",
+      "customer_id": "cus_Uybm2qA8fi13GA",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785358814,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TyeSgCd8b2AMTwT07DTdb6E",
+      "customer_id": "cus_UybgQwFoVHrulD",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785358523,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyeSaCd8b2AMTwT0vddxUNF",
+      "customer_id": "cus_KhoidT3IQEffvK",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785358348,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TyeQ2Cd8b2AMTwT1XbfjPVr",
+      "customer_id": "cus_UybdilJmK1YFs4",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785358187,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyeBjCd8b2AMTwT0ZfCWgOc",
+      "customer_id": "cus_Usur0EKDo1ybDM",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785357310,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3Tye63Cd8b2AMTwT07YEE6EI",
+      "customer_id": "cus_Q7l4QpeCac7KjQ",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356967,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3Tye3oCd8b2AMTwT0uiCYuOb",
+      "customer_id": "cus_UybGsoH1HoHtUg",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356836,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3Tye43Cd8b2AMTwT1Vnnthtx",
+      "customer_id": "cus_JAy1rcHGAVMHR3",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356818,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tye3CCd8b2AMTwT8B3pt9Gt"
+    },
+    {
+      "charge_id": "ch_3TydvSCd8b2AMTwT1OZb1MuR",
+      "customer_id": "cus_RfHpmm8U5zK0ul",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356296,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TydrlCd8b2AMTwT1xEr2vCu",
+      "customer_id": "cus_IvZIHWkgnhh1rc",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356111,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TydqsCd8b2AMTwT1VXanCrx",
+      "customer_id": "cus_Uyb2P7vbyN6DQZ",
+      "amount": 135.0,
+      "date": "2026-07-29",
+      "timestamp": 1785356002,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TydqrCd8b2AMTwTyEGzofCt"
+    },
+    {
+      "charge_id": "ch_3TydmdCd8b2AMTwT01QalGMT",
+      "customer_id": "cus_UyayEXMPISh97u",
+      "amount": 190.0,
+      "date": "2026-07-29",
+      "timestamp": 1785355766,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "py_3TydhzCd8b2AMTwT1hwp1ho7",
+      "customer_id": "cus_Il8f8604qHpgaQ",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785355486,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TyddqCd8b2AMTwT15Qg1gSA",
+      "customer_id": "cus_LbCLJK1OBgksdk",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785355192,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tydd7Cd8b2AMTwTon8dqXFS"
+    },
+    {
+      "charge_id": "ch_3TydXMCd8b2AMTwT1apR6dyE",
+      "customer_id": "cus_UyaiCZynzQuYsU",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785354832,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TydWxCd8b2AMTwT1iF7x4Td",
+      "customer_id": "cus_RBKCRgcNPYqmJH",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785354807,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TydVJCd8b2AMTwT0rbl7IG6",
+      "customer_id": "cus_RF22K3KC5uHJJU",
+      "amount": 95.0,
+      "date": "2026-07-29",
+      "timestamp": 1785354682,
+      "type": "event",
+      "description": "Order for Future of Cherry Creek",
+      "invoice_id": null
+    },
+    {
+      "charge_id": "ch_3TydRbCd8b2AMTwT0FnBB3gC",
+      "customer_id": "cus_UnLpMb2Y55S5SU",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785354433,
+      "type": "monthly",
+      "description": "BusinessDen Monthly Membership",
+      "invoice_id": "in_1TydQICd8b2AMTwTrOpmThTo"
+    },
+    {
+      "charge_id": "ch_3TydMUCd8b2AMTwT1U1ghbAS",
+      "customer_id": "cus_KgcyM5q3Vssq8F",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785354116,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TydLmCd8b2AMTwTHCuGWfjj"
+    },
+    {
+      "charge_id": "ch_3TyUE2Cd8b2AMTwT10HzgAPf",
+      "customer_id": "cus_ISM9SdTx9wVOFT",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785352654,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyUDKCd8b2AMTwTjjubEjCK"
+    },
+    {
+      "charge_id": "ch_3Tyct1Cd8b2AMTwT0Ny3uPlT",
+      "customer_id": "cus_IPRy3rAEsfRDn4",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785352289,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TycrqCd8b2AMTwTbTsNZNDO"
+    },
+    {
+      "charge_id": "ch_3TybdxCd8b2AMTwT1lZIhezj",
+      "customer_id": "cus_M9FpJdMGizfZHV",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785347512,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TybcgCd8b2AMTwTxjt1oTcT"
+    },
+    {
+      "charge_id": "ch_3TyauxCd8b2AMTwT0Icciy1i",
+      "customer_id": "cus_JwVfCNlnannJcn",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785344722,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1Tyau9Cd8b2AMTwTawf53iyW"
+    },
+    {
+      "charge_id": "ch_3TyakKCd8b2AMTwT14tTLxF5",
+      "customer_id": "cus_If5aJ8KqkhvM7O",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785344063,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyailCd8b2AMTwTMQYFAbs6"
+    },
+    {
+      "charge_id": "ch_3TyahQCd8b2AMTwT1jET7oTm",
+      "customer_id": "cus_ORyKKOu21RfG9q",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785343883,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyaftCd8b2AMTwTazqVUmBe"
+    },
+    {
+      "charge_id": "ch_3TyaMjCd8b2AMTwT0xDIptb3",
+      "customer_id": "cus_Q0z1UZ6vliK9iW",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785342600,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyaLaCd8b2AMTwTV3lbtEyT"
+    },
+    {
+      "charge_id": "ch_3TyaIpCd8b2AMTwT1XnYC1gT",
+      "customer_id": "cus_Iaex0NlJ7sbTpj",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785342358,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyaHiCd8b2AMTwTRsnoJWzm"
+    },
+    {
+      "charge_id": "ch_3TyZQECd8b2AMTwT16pxkuuc",
+      "customer_id": "cus_Sln1c9TABt83CH",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785338973,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyZPSCd8b2AMTwTO5DCxXEh"
+    },
+    {
+      "charge_id": "ch_3TyZLtCd8b2AMTwT1UaK0qAc",
+      "customer_id": "cus_JwU2fPRAVMQIFb",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785338704,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyZKlCd8b2AMTwTBwTLlTvA"
+    },
+    {
+      "charge_id": "ch_3TyZHUCd8b2AMTwT08a7MPNT",
+      "customer_id": "cus_QZ3SvMnXDRTV6r",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785338431,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyZGGCd8b2AMTwTn7w3JyzG"
+    },
+    {
+      "charge_id": "ch_3TyZFZCd8b2AMTwT0qIm1dUb",
+      "customer_id": "cus_UyWIcFjykO0yuv",
+      "amount": 135.0,
+      "date": "2026-07-29",
+      "timestamp": 1785338312,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyZFYCd8b2AMTwTxX5BAsDN"
+    },
+    {
+      "charge_id": "ch_3TyZEDCd8b2AMTwT1xiz2mfE",
+      "customer_id": "cus_UyWGEcddUdmjP5",
+      "amount": 135.0,
+      "date": "2026-07-29",
+      "timestamp": 1785338230,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyZECCd8b2AMTwTsoS3KUWz"
+    },
+    {
+      "charge_id": "ch_3TyYu2Cd8b2AMTwT1M36i7MY",
+      "customer_id": "cus_If3hdVVocnheGY",
+      "amount": 12.5,
+      "date": "2026-07-29",
+      "timestamp": 1785336976,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyYsjCd8b2AMTwT2AvTCkIR"
+    },
+    {
+      "charge_id": "ch_3TyY6kCd8b2AMTwT1YVpYVEo",
+      "customer_id": "cus_KUvXXLxKXET0Cg",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785333920,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyY5ZCd8b2AMTwT5UOnsV03"
+    },
+    {
+      "charge_id": "ch_3TyXp1Cd8b2AMTwT00XLFBHC",
+      "customer_id": "cus_UyUoLhi5FBOFVw",
+      "amount": 135.0,
+      "date": "2026-07-29",
+      "timestamp": 1785332822,
+      "type": "annual",
+      "description": "BusinessDen Annual Membership 135",
+      "invoice_id": "in_1TyXp1Cd8b2AMTwTIG99rykp"
+    },
+    {
+      "charge_id": "ch_3TyWldCd8b2AMTwT0vHGFJur",
+      "customer_id": "cus_SlkHrQxYCfVZxY",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785328768,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyWkUCd8b2AMTwTqHMbPHxt"
+    },
+    {
+      "charge_id": "ch_3TyWglCd8b2AMTwT1wn75QqN",
+      "customer_id": "cus_JwRIPM40uTSggt",
+      "amount": 165.0,
+      "date": "2026-07-29",
+      "timestamp": 1785328466,
+      "type": "annual",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyWffCd8b2AMTwTWAXiCk1U"
+    },
+    {
+      "charge_id": "ch_3TyWgZCd8b2AMTwT19xXFXqK",
+      "customer_id": "cus_KJfIGtOSDn5GIE",
+      "amount": 15.0,
+      "date": "2026-07-29",
+      "timestamp": 1785328453,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyWfGCd8b2AMTwT0hYq8b8i"
+    },
+    {
+      "charge_id": "ch_3TyWbiCd8b2AMTwT1gzKWH36",
+      "customer_id": "cus_KW27wKlrrVw0KF",
+      "amount": 35.0,
+      "date": "2026-07-29",
+      "timestamp": 1785328152,
+      "type": "monthly",
+      "description": "Subscription update",
+      "invoice_id": "in_1TyWaSCd8b2AMTwTzff7Ix0I"
+    },
     {
       "charge_id": "ch_3TyOfmCd8b2AMTwT1Mp1FWR0",
       "customer_id": "cus_UyLMEN9W8aQu5y",
