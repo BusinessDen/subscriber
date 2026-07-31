@@ -1,0 +1,72 @@
+name: Validate Stripe Structure (accrual build)
+
+# Manual only. This does not touch any existing workflow, data file, or
+# schedule in this repo. It makes read-only Stripe calls and produces a
+# single downloadable report.
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_invoices:
+        description: "Cap on invoices scanned (lower this if the run is slow)"
+        required: false
+        default: "40000"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ------------------------------------------------------------------
+      # Safety gate. The report contains monthly revenue, subscriber counts,
+      # and the full price list. On a public repo, Actions logs AND uploaded
+      # artifacts are readable by anyone. Fail loudly rather than leak.
+      # ------------------------------------------------------------------
+      - name: Refuse to run on a public repository
+        if: ${{ github.event.repository.private == false }}
+        run: |
+          echo "::error::This repository is PUBLIC. Actions artifacts and logs"
+          echo "::error::are world-readable. The report contains revenue data."
+          echo "::error::Run this from a private repo, or run it locally instead."
+          exit 1
+
+      - name: Confirm the Stripe secret exists
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: |
+          if [ -z "$STRIPE_SECRET_KEY" ]; then
+            echo "::error::STRIPE_SECRET_KEY is not set in this repo."
+            echo "::error::Settings -> Secrets and variables -> Actions."
+            echo "::error::If the secret exists under a different name, edit"
+            echo "::error::this workflow to reference that name instead."
+            exit 1
+          fi
+          echo "Secret is present."
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Stripe SDK
+        run: pip install --quiet stripe
+
+      - name: Run validator
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          MAX_INVOICES: ${{ github.event.inputs.max_invoices }}
+          QUIET: "1"
+        run: python validate_accrual.py
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: stripe-structure-report
+          path: stripe_structure_report.txt
+          retention-days: 1
+          if-no-files-found: error
