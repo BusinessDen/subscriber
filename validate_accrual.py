@@ -7,7 +7,7 @@ same content to screen. Output is scrubbed of customer names, emails, and
 customer/charge/invoice IDs so the report can be pasted back verbatim.
 
 Usage:
-     export STRIPE_SECRET_KEY=rk_live_...      (leading space = stays out of history)
+     export STRIPE_KEY=rk_live_...             (leading space = stays out of history)
     python validate.py
 
 Optional:
@@ -28,9 +28,9 @@ try:
 except ImportError:
     sys.exit("stripe library not installed. Run: pip install stripe")
 
-KEY = os.environ.get("STRIPE_SECRET_KEY")
+KEY = os.environ.get("STRIPE_KEY") or os.environ.get("STRIPE_SECRET_KEY")
 if not KEY:
-    sys.exit("STRIPE_SECRET_KEY not set in this shell.")
+    sys.exit("Set STRIPE_KEY (or STRIPE_SECRET_KEY) in this shell.")
 
 stripe.api_key = KEY
 
