@@ -1,8 +1,11 @@
 name: Validate Stripe Structure (accrual build)
 
-# Manual only. This does not touch any existing workflow, data file, or
-# schedule in this repo. It makes read-only Stripe calls and produces a
-# single downloadable report.
+# Manual only. Read-only Stripe calls. Does not touch any existing workflow,
+# data file, schedule, or Pages deployment in this repo.
+#
+# This repo is PUBLIC, which means Actions logs and artifacts are readable by
+# anyone. The report is therefore encrypted on the runner with a passphrase
+# only you hold, and the plaintext never exists outside the job's memory.
 
 on:
   workflow_dispatch:
@@ -21,31 +24,28 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # ------------------------------------------------------------------
-      # Safety gate. The report contains monthly revenue, subscriber counts,
-      # and the full price list. On a public repo, Actions logs AND uploaded
-      # artifacts are readable by anyone. Fail loudly rather than leak.
-      # ------------------------------------------------------------------
-      - name: Refuse to run on a public repository
-        if: ${{ github.event.repository.private == false }}
-        run: |
-          echo "::error::This repository is PUBLIC. Actions artifacts and logs"
-          echo "::error::are world-readable. The report contains revenue data."
-          echo "::error::Run this from a private repo, or run it locally instead."
-          exit 1
-
-      - name: Confirm the Stripe secret exists
+      - name: Preflight
         env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_KEY }}
+          REPORT_PASSPHRASE: ${{ secrets.REPORT_PASSPHRASE }}
         run: |
+          fail=0
           if [ -z "$STRIPE_SECRET_KEY" ]; then
-            echo "::error::STRIPE_SECRET_KEY is not set in this repo."
+            echo "::error::STRIPE_KEY not found in this repo."
             echo "::error::Settings -> Secrets and variables -> Actions."
-            echo "::error::If the secret exists under a different name, edit"
-            echo "::error::this workflow to reference that name instead."
-            exit 1
+            echo "::error::If it exists under another name, edit this workflow."
+            fail=1
           fi
-          echo "Secret is present."
+          if [ -z "$REPORT_PASSPHRASE" ]; then
+            echo "::error::REPORT_PASSPHRASE not set. Add it as a repo secret."
+            echo "::error::Any phrase of 12+ characters. You will need it to"
+            echo "::error::decrypt the downloaded report, so save it somewhere."
+            fail=1
+          fi
+          if [ "${{ github.event.repository.private }}" = "false" ]; then
+            echo "::warning::Public repo. Report will be encrypted before upload."
+          fi
+          exit $fail
 
       - uses: actions/checkout@v4
 
@@ -53,20 +53,31 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Stripe SDK
-        run: pip install --quiet stripe
+      - name: Install dependencies
+        run: pip install --quiet stripe cryptography
 
       - name: Run validator
         env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_KEY }}
           MAX_INVOICES: ${{ github.event.inputs.max_invoices }}
           QUIET: "1"
         run: python validate_accrual.py
 
-      - name: Upload report
+      - name: Encrypt report and destroy plaintext
+        env:
+          REPORT_PASSPHRASE: ${{ secrets.REPORT_PASSPHRASE }}
+        run: |
+          python secure_report.py encrypt \
+            stripe_structure_report.txt \
+            stripe_structure_report.enc
+          shred -u stripe_structure_report.txt 2>/dev/null \
+            || rm -f stripe_structure_report.txt
+          test ! -f stripe_structure_report.txt && echo "Plaintext removed."
+
+      - name: Upload encrypted report
         uses: actions/upload-artifact@v4
         with:
           name: stripe-structure-report
-          path: stripe_structure_report.txt
+          path: stripe_structure_report.enc
           retention-days: 1
           if-no-files-found: error
