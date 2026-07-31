@@ -265,13 +265,15 @@ def section_subscriptions():
     by_status = Counter()
     by_price = Counter()
     price_amounts = Counter()
-    multi_item = 0
-    with_discount = 0
-    with_trial = 0
-    cancel_at_end = 0
     renewal_month = Counter()
     period_lengths = Counter()
     total = 0
+
+    # Flags tracked separately for the whole book and for the active book.
+    # Canceled subscriptions retain cancel_at_period_end, so an all-status
+    # count badly overstates forward churn among paying subscribers.
+    flags_all = Counter()
+    flags_active = Counter()
 
     for raw in stripe.Subscription.list(status="all", limit=100).auto_paging_iter():
         s = plain(raw)
@@ -279,14 +281,19 @@ def section_subscriptions():
         by_status[s.get("status")] += 1
 
         items = (s.get("items") or {}).get("data") or []
-        if len(items) > 1:
-            multi_item += 1
-        if s.get("discount"):
-            with_discount += 1
-        if s.get("trial_end"):
-            with_trial += 1
-        if s.get("cancel_at_period_end"):
-            cancel_at_end += 1
+        active = s.get("status") in ("active", "trialing", "past_due")
+
+        for bucket, on in ((flags_all, True), (flags_active, active)):
+            if not on:
+                continue
+            if len(items) > 1:
+                bucket["multi_item"] += 1
+            if s.get("discount"):
+                bucket["discount"] += 1
+            if s.get("trial_end"):
+                bucket["trial"] += 1
+            if s.get("cancel_at_period_end"):
+                bucket["cancel_at_end"] += 1
 
         # Harvest price objects embedded in subscription items. This is the
         # fallback taxonomy when Price.list is not permitted.
@@ -312,19 +319,24 @@ def section_subscriptions():
                     "source": "subscription",
                 }
 
-        if s.get("status") in ("active", "trialing", "past_due"):
+        if active:
             for it in items:
                 price = it.get("price") or {}
                 qty = it.get("quantity") or 1
                 by_price[price.get("id")] += qty
                 price_amounts[price.get("unit_amount")] += qty
-            cps = s.get("current_period_start")
-            cpe = s.get("current_period_end")
-            if cpe:
-                renewal_month[month_key(cpe)] += 1
-            d = days(cps, cpe)
-            if d:
-                period_lengths[d] += 1
+
+                # API 2025-03-31.basil and later moved current_period_start /
+                # current_period_end off the subscription and onto each
+                # subscription item. Read the item first, fall back to the
+                # subscription for older pinned versions.
+                cps = it.get("current_period_start") or s.get("current_period_start")
+                cpe = it.get("current_period_end") or s.get("current_period_end")
+                if cpe:
+                    renewal_month[month_key(cpe)] += 1
+                d = days(cps, cpe)
+                if d:
+                    period_lengths[d] += 1
 
     sub("Counts by status")
     for status, n in by_status.most_common():
@@ -339,10 +351,17 @@ def section_subscriptions():
             str(pid), money(info.get("amount")), info.get("cadence", "?"), n))
 
     sub("Structural flags")
-    out("  multi-item subscriptions    {:>6}   (corporate seat plans?)".format(multi_item))
-    out("  carrying a discount/coupon  {:>6}   (changes recognized amount)".format(with_discount))
-    out("  with a trial period         {:>6}   (zero-revenue service days)".format(with_trial))
-    out("  set to cancel at period end {:>6}   (still accrue until then)".format(cancel_at_end))
+    out("{:<30}{:>10}{:>10}".format("", "ACTIVE", "ALL"))
+    for key, label in (
+            ("multi_item", "multi-item subscriptions"),
+            ("discount", "carrying a discount/coupon"),
+            ("trial", "with a trial period"),
+            ("cancel_at_end", "set to cancel at period end")):
+        out("  {:<28}{:>10}{:>10}".format(
+            label, flags_active[key], flags_all[key]))
+    out()
+    out("  ACTIVE is the meaningful column. Canceled subscriptions keep")
+    out("  cancel_at_period_end set, so the ALL column overstates it.")
 
     sub("Current period lengths (days) among active subs")
     out("Confirms the daily accrual denominator varies by period, not 1/365.")
@@ -469,6 +488,25 @@ def _metadata_summary():
                 out("  {:<24} {}".format(k, pairs))
             else:
                 out("  {:<24} {} distinct values".format(k, len(counter)))
+
+    pubs = defaultdict(list)
+    for pid in PRICE_INDEX:
+        low = str(pid).lower()
+        if "bizsense" in low:
+            pubs["Richmond BizSense"].append(pid)
+        elif "bizden" in low:
+            pubs["BusinessDen"].append(pid)
+    if pubs:
+        sub("Legacy price IDs naming a publication")
+        for label in sorted(pubs):
+            out("  {:<22} {} price(s)".format(label, len(pubs[label])))
+            for pid in sorted(pubs[label]):
+                info = PRICE_INDEX.get(pid, {})
+                out("      {:<40} {:>10} {}".format(
+                    pid, money(info.get("amount")), info.get("cadence", "?")))
+        out()
+        out("  Both mastheads billing from one Stripe account means the")
+        out("  collector needs a publication dimension from day one.")
 
     out()
     out("QUESTION THIS ANSWERS: can corporate be told apart from regular")
